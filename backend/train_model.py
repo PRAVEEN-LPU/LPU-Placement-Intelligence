@@ -90,7 +90,7 @@ def main():
 
     # ── Step 2: Train ─────────────────────────────────────────────────────
     print("\nStep 2 — Splitting dataset (80% train / 20% test, stratified) ...")
-    print("Step 3 — Training Random Forest Classifier (250 trees, max_depth=12) ...")
+    print("Step 3 — Training Gradient Boosting Classifier (200 estimators, max_depth=5, lr=0.1) ...")
 
     payload = train_placement_model(data_df=data_df, save_path=MODEL_PATH)
     metrics = payload["metrics"]
