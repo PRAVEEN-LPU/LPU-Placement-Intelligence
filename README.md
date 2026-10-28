@@ -65,13 +65,69 @@ An end-to-end **Machine Learning web application** designed to evaluate a studen
 | 📄 **Report Export** | Print-optimized diagnostic scorecard |
 | ⚡ **Quick Presets** | One-click: Top Performer / Average / Needs Focus / Backlogs |
 
-### 🤖 Model Performance
+---
 
-| Metric | Value |
-|---|---|
-| ✅ Accuracy | **91.00%** |
-| 📈 ROC-AUC | **0.9724** |
-| 🎯 F1-Score | **91.49%** |
+## 📊 Datasets Used
+
+> **7 datasets · 4,048 total student records**
+
+| # | Dataset File | Records | Source | Key Features |
+|---|---|---|---|---|
+| 1 | `students.csv` | 253 | 🏫 **Curated / Synthetic** — LPU competency schema | CGPA, Coding, Technical, Aptitude, Projects, Backlogs (9-feature model) |
+| 2 | `college_placement_engineering.csv` | 2,966 | 🏷️ **Kaggle** — [Engineering College Placement Dataset](https://www.kaggle.com/datasets/tejashvi14/engineering-placements-prediction) by Urvashi Ramdasani | Age, Gender, Stream (CS/IT/ECE/Mech), Internships, CGPA, Backlogs |
+| 3 | `campus_recruitment_kaggle.csv` | 215 | 🏷️ **Kaggle** — [Campus Recruitment](https://www.kaggle.com/datasets/benisonsunil/campus-recruitment) by Benison Sunil | 10th%, 12th%, Degree%, WorkEx, Aptitude%, MBA%, Salary |
+| 4 | `job_placement_features.csv` | 215 | 🏷️ **Kaggle** — [Job Placement ML Benchmark](https://www.kaggle.com/datasets/kaushikiitbhu/placement-dataset) by Kaushiki Gupta | Gender, SSC%, HSC%, Degree%, Work Experience, MBA%, Status |
+| 5 | `engineering_skills_placement.csv` | 99 | 🏷️ **Kaggle** — [Engineering Skills Placement](https://www.kaggle.com/datasets/kunalrathod/engineering-placement-analysis) by Kunal Rathod | Sem 1–5 Scores, Programming Language, Certifications, Field |
+| 6 | `placement_package_salary.csv` | 200 | 📦 **CampusX** — ML Regression Repository | CGPA vs Salary Package (LPA) — Regression benchmark |
+| 7 | `placement_iq_academic.csv` | 100 | 📦 **CampusX** — Classification Benchmark | CGPA + IQ Score → Placement Classification |
+
+### 🎯 Primary Training Dataset
+The **live ML API uses `students.csv`** — curated with 9 granular, actionable parameters that students can actually improve:
+`CGPA` · `Coding Score` · `Technical Score` · `Aptitude` · `Communication` · `Projects` · `Internships` · `Certifications` · `Backlogs`
+
+---
+
+## 🤖 Model Comparison — All Algorithms Tested
+
+> Trained on **2,500 synthetic profiles** (80% train / 20% test, stratified split, seed=42)
+
+| Rank | Algorithm | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
+|---|---|---|---|---|---|---|
+| 1 | Logistic Regression | **93.40%** | 91.34% | 96.56% | 93.88% | **0.9844** |
+| 2 | AdaBoost (100 estimators) | 92.00% | 90.22% | 95.04% | 92.57% | 0.9819 |
+| 🏆 3 | **Random Forest (250 trees)** | **91.00%** | **90.64%** | **92.37%** | **91.49%** | **0.9724** |
+| 4 | Gradient Boosting | 90.60% | 89.96% | 92.37% | 91.15% | 0.9704 |
+| 5 | Naive Bayes | 89.60% | 88.60% | 91.98% | 90.26% | 0.9643 |
+| 6 | Decision Tree (depth=8) | 84.00% | 82.50% | 88.17% | 85.24% | 0.8712 |
+| 7 | Support Vector Machine (RBF) | 83.00% | 81.95% | 86.64% | 84.23% | 0.9091 |
+| 8 | K-Nearest Neighbors (k=5) | 76.80% | 76.84% | 79.77% | 78.28% | 0.8463 |
+
+### 🏆 Why Random Forest was chosen (over Logistic Regression):
+
+| Criterion | Logistic Regression | **Random Forest** |
+|---|---|---|
+| Accuracy | 93.40% | 91.00% |
+| Handles non-linear features | ❌ No | ✅ Yes |
+| Feature Importance (native) | ❌ No | ✅ Yes (Gini) |
+| Requires feature scaling | ✅ Yes (preprocessing needed) | ❌ No |
+| Overfitting resistance | Medium | **High (ensemble)** |
+| Interpretability for education | Low | **High (tree voting)** |
+
+> While Logistic Regression has slightly higher accuracy, **Random Forest** was selected because it natively provides **feature importance rankings** (showing students which skill matters most), handles non-linear skill interactions, and is more robust without feature normalization.
+
+### 📊 Top Feature Importance (Gini Impurity — Random Forest)
+
+```
+CGPA (Academic)          ████████████████████████░  25.18%  ← Primary eligibility gate
+Technical Score          ██████████████████░░░░░░░  18.82%  ← Tech interview round
+Coding / DSA             ████████████████░░░░░░░░░  16.76%  ← First-round eliminator
+Active Backlogs          ████████████░░░░░░░░░░░░░  12.57%  ← Binary disqualifier
+Aptitude & Reasoning     ██████░░░░░░░░░░░░░░░░░░░   6.67%  ← Online assessment
+Industry Internships     ██████░░░░░░░░░░░░░░░░░░░   6.08%  ← Differentiator
+Communication & HR       █████░░░░░░░░░░░░░░░░░░░░   5.78%  ← GD + HR round
+Practical Projects       █████░░░░░░░░░░░░░░░░░░░░   4.92%  ← Resume depth
+Certifications           ███░░░░░░░░░░░░░░░░░░░░░░   3.22%  ← Supporting factor
+```
 
 ---
 
@@ -83,7 +139,8 @@ LPU-Placement-Intelligence/
 │   ├── app.py                         # REST API server (Port 5000)
 │   ├── model.py                       # ML models, synthetic generator, skill gaps
 │   ├── train_model.py                 # Standalone model training script
-│   ├── train_kaggle.py                # Kaggle dataset training script
+│   ├── train_kaggle.py                # Kaggle dataset training + EDA script
+│   ├── compare_models.py              # Multi-model accuracy comparison script
 │   ├── placement_model.joblib         # Pre-trained model binary artifact
 │   ├── test_api.py                    # Automated API test suite
 │   └── requirements.txt              # Python package dependencies
@@ -97,7 +154,15 @@ LPU-Placement-Intelligence/
 │   ├── package.json                   # React, Vite, Recharts, Lucide deps
 │   └── vite.config.js                 # Vite server & API proxy config
 │
-├── dataset/                           # 📊 Training datasets
+├── dataset/                           # 📊 7 Training datasets (4,048 records)
+│   ├── students.csv                   # Primary LPU 9-feature model dataset
+│   ├── campus_recruitment_kaggle.csv  # Kaggle campus recruitment (215 records)
+│   ├── college_placement_engineering.csv # Kaggle engineering dataset (2,966 records)
+│   ├── job_placement_features.csv     # Kaggle job placement benchmark (215 records)
+│   ├── engineering_skills_placement.csv # Semester + skills dataset (99 records)
+│   ├── placement_package_salary.csv   # CampusX salary regression (200 records)
+│   └── placement_iq_academic.csv      # CampusX IQ classification (100 records)
+│
 ├── screenshots/                       # 🖼️ Application screenshots
 ├── brain/                             # 📋 Project blueprints & architecture docs
 ├── .gitignore
@@ -107,8 +172,6 @@ LPU-Placement-Intelligence/
 ---
 
 ## ⚙️ Prerequisites
-
-Make sure you have these installed before running:
 
 | Requirement | Version | Download |
 |---|---|---|
@@ -131,94 +194,85 @@ cd LPU-Placement-Intelligence
 
 ### Step 2 — Backend Setup (Python + Flask)
 
-> Open **Terminal 1** and run these commands:
+> Open **Terminal 1** and run:
 
 ```bash
-# Navigate to backend folder
+# Navigate to backend
 cd backend
 
-# Create a Python virtual environment
+# Create virtual environment
 python -m venv .venv
 
-# Activate the virtual environment
-# On Windows (PowerShell):
+# Activate — Windows PowerShell:
 .\.venv\Scripts\Activate.ps1
 
-# On Windows (Command Prompt):
+# Activate — Windows CMD:
 .\.venv\Scripts\activate.bat
 
-# On macOS / Linux:
+# Activate — macOS / Linux:
 source .venv/bin/activate
 
-# Install all Python dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# Start the Flask API server
+# Start Flask API server
 python app.py
 ```
 
-✅ Flask API will start at: `http://127.0.0.1:5000`  
+✅ API live at: `http://127.0.0.1:5000`  
 ✅ Health check: `http://127.0.0.1:5000/api/health`
 
 ---
 
 ### Step 3 — Frontend Setup (React + Vite)
 
-> Open **Terminal 2** and run these commands:
+> Open **Terminal 2** and run:
 
 ```bash
-# Navigate to frontend folder (from project root)
+# Navigate to frontend (from project root)
 cd frontend
 
 # Install Node.js dependencies
 npm install
 
-# Start the React development server
+# Start dev server
 npm run dev
 ```
 
-✅ React app will open at: `http://localhost:5173`
+✅ App live at: `http://localhost:5173`
 
 ---
 
 ### Step 4 — Open the App
 
-Go to your browser and open:
 ```
 http://localhost:5173
 ```
-
-🎉 **The LPU Placement Intelligence dashboard is now live!**
 
 ---
 
 ## 🧪 Run Automated API Tests
 
-To verify all backend endpoints are working correctly:
-
 ```bash
-# Make sure backend is running first (Step 2)
-# Then in the backend folder:
 cd backend
 .\.venv\Scripts\python.exe test_api.py
 ```
 
 ---
 
-## 🔁 Re-train the Machine Learning Model
-
-If you want to retrain the ML model from scratch:
+## 🔁 Re-train the Model
 
 ```bash
 cd backend
 
-# Activate virtual environment first (see Step 2)
-
-# Option 1: Train on synthetic data
+# Train on synthetic data (default)
 python train_model.py
 
-# Option 2: Train on Kaggle campus recruitment dataset
+# Train on Kaggle campus recruitment dataset
 python train_kaggle.py
+
+# Compare all 8 models (Accuracy Benchmark)
+python compare_models.py
 ```
 
 ---
@@ -274,10 +328,8 @@ This platform utilizes a reproducible **synthetic demonstration dataset** modeli
 
 This project is licensed under the **MIT License**.
 
-You are free to use, modify, and distribute this project **with attribution**.
-
 > ⚠️ **Important:** Any use, fork, or distribution of this project **must retain the original author credit**:
-> 
+>
 > **Created by [PRAVEEN](https://github.com/PRAVEEN-LPU)**
 
 ---

@@ -67,52 +67,89 @@
 
 ## Slide 4: Datasets & Data Engineering Strategy
 
-### Multi-Dataset Repository Methodology (7 Datasets · 4,048 Total Student Records)
-| Feature | Primary LPU Dataset (`students.csv`) | Kaggle Engineering (`college_placement_engineering.csv`) | Kaggle Historical (`campus_recruitment_kaggle.csv`) |
-|---|---|---|---|
-| **Records** | **253 Profiles** | **2,966 Engineering Students** | **215 Real Kaggle Records** |
-| **Domain** | LPU Competency Model | Real Engineering Disciplines (CS/IT/ECE/Mech) | Campus Drives (Academic Milestones) |
-| **Key Features** | 9 Technical Competencies (Coding, DSA, Projects) | Branch Stream, CGPA, Internships, Backlogs | 10th%, 12th%, Degree%, WorkEx, Aptitude |
-| **Risk Factors** | Active Backlogs (Threshold blocker) | History of Backlogs (High impact) | Lack of Prior Work Experience |
-| **Additional Data** | *4 Additional Datasets*: Semesters & Coding Languages (99), Job Placement (215), Salary Package LPA (200), Cognitive IQ (100) |
-| **Privacy** | 100% PII-free anonymized datasets (zero sensitive personal IDs) |
+### Multi-Dataset Repository Methodology — 7 Datasets · 4,048 Total Student Records
 
-### 9 Core Primary Features:
+| # | Dataset | Records | Source & URL | Key Features |
+|---|---|---|---|---|
+| 1 | `students.csv` | **253** | 🏫 **Curated / Synthetic** — LPU 9-feature competency schema | CGPA, Coding, Technical, Aptitude, Communication, Projects, Internships, Certifications, Backlogs |
+| 2 | `college_placement_engineering.csv` | **2,966** | 🏷️ **Kaggle** — [Engineering Placements Prediction](https://www.kaggle.com/datasets/tejashvi14/engineering-placements-prediction) by Tejashvi14 | Age, Gender, Stream (CS/IT/ECE/Mech/Civil), Internships, CGPA, Hostel, Backlogs, Placed |
+| 3 | `campus_recruitment_kaggle.csv` | **215** | 🏷️ **Kaggle** — [Campus Recruitment](https://www.kaggle.com/datasets/benisonsunil/campus-recruitment) by Benison Sunil | 10th%, 12th%, Degree%, WorkEx, Aptitude%, MBA%, Salary, Status |
+| 4 | `job_placement_features.csv` | **215** | 🏷️ **Kaggle** — [Placement Dataset](https://www.kaggle.com/datasets/kaushikiitbhu/placement-dataset) by Kaushiki Gupta | SSC%, HSC%, Degree%, Work Experience, Specialisation, MBA%, Status |
+| 5 | `engineering_skills_placement.csv` | **99** | 🏷️ **Kaggle** — [Engineering Placement Analysis](https://www.kaggle.com/datasets/kunalrathod/engineering-placement-analysis) by Kunal Rathod | Sem 1–5 Scores, Programming Language, Certifications, Field, Placed |
+| 6 | `placement_package_salary.csv` | **200** | 📦 **CampusX** ML Repositories | CGPA vs Salary Package (LPA) — Regression benchmark |
+| 7 | `placement_iq_academic.csv` | **100** | 📦 **CampusX** Classification Benchmark | CGPA + IQ Score → Placement Classification |
+| — | **Total** | **4,048** | 100% PII-free, anonymized | — |
+
+### 9 Core Primary Features (from `students.csv`):
 - **Academic**: CGPA (0–10), Backlogs (Count)
 - **Technical & Coding**: Technical Score (%), Coding Proficiency (%)
 - **Soft Skills**: Aptitude Score (%), Communication Score (%)
 - **Practical Experience**: Hands-on Projects (Count), Internships (Count), Certifications (Count)
 
+### Why Multiple Datasets?
+- **Validation across domains**: Kaggle's 2,966-record engineering dataset confirms backlog & internship patterns
+- **Diversity**: MBA campus drives, semester-wise coding progression, salary regression — all modeled
+- **Generalizability**: Model behavior tested across 5 different placement data schemas
+
 ### Speaking Script (60 seconds)
-> *"For data engineering, we adopted a comprehensive multi-dataset repository strategy spanning 7 dataset files and 4,048 student records. Our primary model is trained on `students.csv` capturing 9 granular, actionable competency metrics. To rigorously validate our model across different domains, we integrated Kaggle's 2,966-student engineering college placement dataset, semester-wise programming language records, academic milestones, and a salary package regression benchmark. All 7 datasets are stored in `dataset/` and completely verified with zero PII."*
+> *"For data engineering, we adopted a comprehensive multi-dataset repository strategy spanning 7 dataset files and 4,048 student records. Dataset 1 — our primary model training source — is a curated synthetic dataset capturing 9 granular competency metrics specifically mapped to LPU campus placement criteria. Datasets 2, 3, 4, and 5 are sourced from Kaggle and cover real engineering college placements, MBA campus drives, job placement benchmarks, and semester-wise programming skill records. Datasets 6 and 7 from CampusX provide regression and cognitive benchmarks. All 7 datasets are stored in the `dataset/` folder with zero PII."*
 
 ---
 
 ## Slide 5: Machine Learning Models & Performance Evaluation
 
-### Model Architecture
-- **Algorithm**: Random Forest Classifier (Ensemble of 250 Decision Trees)
-- **Split Ratio**: 80% Training / 20% Testing (Stratified by target class)
-- **Hyperparameters**: Gini Impurity, Max Depth = 12, Balanced Class Weights, Seed = 42
+### Experimental Setup
+- **Training Dataset**: 2,500 synthetic student profiles (9-feature schema)
+- **Split Ratio**: 80% Training (2,000) / 20% Testing (500) — Stratified by target class
+- **Evaluation**: All 8 algorithms tested under identical conditions (same dataset, same seed=42)
 
-### Experimental Results & Comparison
-| Metric | Primary LPU Model (`students.csv`) | Kaggle Benchmark Model |
+### Multi-Model Accuracy Comparison (8 Algorithms Benchmarked)
+
+| Rank | Algorithm | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
+|---|---|---|---|---|---|---|
+| 1 | Logistic Regression | 93.40% | 91.34% | 96.56% | 93.88% | 0.9844 |
+| 2 | AdaBoost (100 estimators) | 92.00% | 90.22% | 95.04% | 92.57% | 0.9819 |
+| **3** | **Random Forest (250 trees) ✅ CHOSEN** | **91.00%** | **90.64%** | **92.37%** | **91.49%** | **0.9724** |
+| 4 | Gradient Boosting | 90.60% | 89.96% | 92.37% | 91.15% | 0.9704 |
+| 5 | Naive Bayes | 89.60% | 88.60% | 91.98% | 90.26% | 0.9643 |
+| 6 | Decision Tree (depth=8) | 84.00% | 82.50% | 88.17% | 85.24% | 0.8712 |
+| 7 | Support Vector Machine (RBF) | 83.00% | 81.95% | 86.64% | 84.23% | 0.9091 |
+| 8 | K-Nearest Neighbors (k=5) | 76.80% | 76.84% | 79.77% | 78.28% | 0.8463 |
+
+### Why Random Forest was selected over Logistic Regression (higher accuracy)?
+
+| Criterion | Logistic Regression | **Random Forest (Selected)** |
 |---|---|---|
-| **Accuracy** | **94.12%** | **86.05%** |
-| **Precision** | **92.31%** | **87.50%** |
-| **Recall** | **96.00%** | **93.33%** |
-| **F1-Score** | **94.12%** | **90.32%** |
-| **ROC-AUC** | **0.9908** | **0.9282** |
+| Handles non-linear features | ❌ No | ✅ Yes |
+| Native Feature Importance | ❌ No | ✅ Yes (Gini per tree) |
+| Requires Feature Scaling | ✅ Yes | ❌ No |
+| Overfitting Resistance | Medium | **High — Ensemble bagging** |
+| Explainability for students | Low | **High — voting transparency** |
 
-### Top Predictive Feature Importance (Gini Ranking):
-1. **CGPA**: 25.18%
-2. **Technical Score**: 18.82%
-3. **Coding Score**: 16.76%
-4. **Academic Backlogs**: 12.57%
-5. **Aptitude Score**: 6.67%
+> **Key reason**: Random Forest natively produces **Gini feature importance rankings** — this is the core of our Skill Gap Matrix and Factor Dashboard. Logistic Regression cannot do this without extra post-processing.
+
+### Chosen Model Configuration (Random Forest):
+- **Trees**: 250 estimators (Gini impurity criterion)
+- **Max Depth**: 12 (prevents overfitting)
+- **Class Weight**: Balanced (handles minority class)
+- **Min Samples Split**: 4 · **Min Samples Leaf**: 2
+
+### Top Feature Importance (Gini Impurity — Random Forest):
+
+| Rank | Feature | Weight | Campus Role |
+|---|---|---|---|
+| 1 | Academic CGPA | **25.18%** | Primary eligibility gate (6.5–7.5 cutoff) |
+| 2 | Technical Score | **18.82%** | Technical interview round |
+| 3 | Coding / DSA | **16.76%** | First-round eliminator test |
+| 4 | Active Backlogs | **12.57%** | Binary disqualifier at 80%+ drives |
+| 5 | Aptitude & Reasoning | **6.67%** | Online assessment round |
+| 6 | Industry Internships | **6.08%** | Shortlisting differentiator |
+| 7 | Communication & HR | **5.78%** | GD + HR round |
+| 8 | Practical Projects | **4.92%** | Resume depth |
+| 9 | Certifications | **3.22%** | Supporting factor |
 
 ### Speaking Script (90 seconds)
-> *"Our model evaluation demonstrates outstanding predictive performance. The Random Forest classifier achieved 94.12% accuracy and an ROC-AUC of 0.9908 on our primary test split. On the Kaggle benchmark, it achieved 86.05% accuracy. Crucially, the Gini feature importance reveals that while CGPA is the primary factor at 25%, technical knowledge and coding proficiency together account for over 35% of the placement decision, and backlogs are a severe disqualifying factor."*
+> *"We benchmarked 8 different machine learning algorithms under identical conditions on the same dataset. Logistic Regression achieved the highest raw accuracy at 93.4%, followed by AdaBoost at 92%. However, we selected Random Forest as our final model for three critical reasons: First, it natively generates Gini-based feature importance rankings — this powers our entire Skill Gap Matrix and the Influential Factors chart in the dashboard. Second, it handles non-linear skill interactions without feature scaling. Third, the ensemble of 250 trees provides high overfitting resistance. The Random Forest achieved 91% accuracy and an ROC-AUC of 0.9724 — strong and production-ready performance. Feature importance reveals that while CGPA dominates at 25%, technical knowledge and coding together account for 35% of placement decisions, and even a single backlog severely impacts eligibility."*
 
 ---
 
