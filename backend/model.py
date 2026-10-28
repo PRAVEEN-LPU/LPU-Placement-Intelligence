@@ -586,9 +586,35 @@ def predict_student_readiness(model_payload: dict, student: dict) -> dict:
     # Create 1-row DataFrame with exact training columns
     input_df = pd.DataFrame([student])[feature_names]
 
-    # Predict probability of placement readiness
-    proba = model.predict_proba(input_df)[0][1]
-    readiness_score = int(round(proba * 100))
+    # Predict probability of placement readiness from trained Gradient Boosting model
+    proba = float(model.predict_proba(input_df)[0][1])
+
+    # Multi-dimensional competency fulfillment index (0-100)
+    cgpa_norm = min(100.0, (student["cgpa"] / 10.0) * 100.0)
+    coding_norm = float(student["coding_score"])
+    tech_norm = float(student["technical_score"])
+    apt_norm = float(student["aptitude_score"])
+    comm_norm = float(student["communication_score"])
+    proj_norm = min(100.0, (student["projects"] / 3.0) * 100.0)
+    intern_norm = min(100.0, (student["internships"] / 2.0) * 100.0)
+    cert_norm = min(100.0, (student["certifications"] / 2.0) * 100.0)
+
+    raw_comp = (
+        0.28 * cgpa_norm
+        + 0.22 * coding_norm
+        + 0.16 * tech_norm
+        + 0.12 * apt_norm
+        + 0.10 * comm_norm
+        + 0.05 * proj_norm
+        + 0.04 * intern_norm
+        + 0.03 * cert_norm
+    )
+    backlog_penalty = student["backlogs"] * 20.0
+    competency_score = max(0.0, min(100.0, raw_comp - backlog_penalty))
+
+    # Diagnostic Readiness Index: 50% Gradient Boosting Inference + 50% Competency Fulfillment
+    readiness_score = int(round(0.50 * (proba * 100.0) + 0.50 * competency_score))
+    readiness_score = max(0, min(100, readiness_score))
 
     # Determine readiness classification
     if readiness_score >= 75:
