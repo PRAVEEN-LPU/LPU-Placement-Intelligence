@@ -321,12 +321,6 @@ curl -X POST http://127.0.0.1:5000/api/predict \
 
 ---
 
-## ⚠️ Educational Disclaimer
-
-This platform utilizes a reproducible **synthetic demonstration dataset** modeling student performance distributions for training purposes. Predictions represent diagnostic readiness indicators and **do not constitute** a legal, formal, or institutional guarantee of campus recruitment outcomes.
-
----
-
 ## 📜 License
 
 This project is licensed under the **MIT License**.

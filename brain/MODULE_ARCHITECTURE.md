@@ -181,8 +181,7 @@ Nine input features define the student competency profile. These are the only in
           "Master C++ STL or Java Collections for efficient implementations."
         ]
       }
-    ],
-    "disclaimer": "Educational demonstration model trained on synthetic data..."
+    ]
   }
 }
 ```
@@ -254,9 +253,6 @@ The synthetic dataset is generated in `model.py → generate_synthetic_student_d
   3. Probability calibration (Platt scaling or isotonic regression).
   4. Regular disparate impact audits across student sub-groups.
   5. Human mentor oversight before any placement advisory decisions.
-
-### Disclaimer
-The readiness score is a diagnostic indicator for educational guidance. It is not a contractual guarantee of placement, a ranking instrument, or a substitute for qualified career advisory from placement coordinators.
 
 ---
 

@@ -15,7 +15,6 @@ import {
   ListTodo,
   Printer,
   RefreshCw,
-  Info,
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
@@ -617,14 +616,6 @@ export default function App() {
                 )}
               </div>
             </div>
-
-            {/* Educational Disclaimer Banner */}
-            {prediction && (
-              <div className="disclaimer-banner">
-                <Info size={20} color="var(--color-warning)" style={{ flexShrink: 0 }} />
-                <span>{prediction.disclaimer}</span>
-              </div>
-            )}
           </section>
         </div>
       </main>
