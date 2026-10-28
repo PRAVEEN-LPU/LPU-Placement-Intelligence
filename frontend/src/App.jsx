@@ -124,7 +124,8 @@ export default function App() {
     }));
   };
 
-  const handleAnalyze = async (dataToAnalyze = formData) => {
+  const handleAnalyze = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
 
@@ -132,7 +133,7 @@ export default function App() {
       const res = await fetch(`${API_BASE}/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToAnalyze),
+        body: JSON.stringify(formData),
       });
 
       const json = await res.json();
@@ -152,16 +153,12 @@ export default function App() {
   const applyPreset = (presetKey) => {
     const presetData = PRESETS[presetKey].data;
     setFormData(presetData);
-    handleAnalyze(presetData);
   };
 
-  // Real-time automatic recalculation whenever sliders/inputs change (150ms debounce)
+  // Run initial prediction once on initial load
   useEffect(() => {
-    const timer = setTimeout(() => {
-      handleAnalyze(formData);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [formData]);
+    handleAnalyze();
+  }, []);
 
   // Gauge calculations
   const score = prediction ? prediction.readiness_score : 0;
