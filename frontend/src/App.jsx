@@ -15,6 +15,7 @@ import {
   ListTodo,
   Printer,
   RefreshCw,
+  Info,
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
