@@ -99,57 +99,66 @@
 ## Slide 5: Machine Learning Models & Performance Evaluation
 
 ### Experimental Setup
-- **Training Dataset**: 2,500 synthetic student profiles (9-feature schema)
-- **Split Ratio**: 80% Training (2,000) / 20% Testing (500) — Stratified by target class
+- **Training Dataset**: `students.csv` — 253 real student records (9-feature schema)
+- **Split Ratio**: 80% Training (202) / 20% Testing (51) — Stratified by target class
 - **Evaluation**: All 8 algorithms tested under identical conditions (same dataset, same seed=42)
 
 ### Multi-Model Accuracy Comparison (8 Algorithms Benchmarked)
 
-| Rank | Algorithm | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
-|---|---|---|---|---|---|---|
-| 1 | Logistic Regression | 93.40% | 91.34% | 96.56% | 93.88% | 0.9844 |
-| 2 | AdaBoost (100 estimators) | 92.00% | 90.22% | 95.04% | 92.57% | 0.9819 |
-| **3** | **Random Forest (250 trees) ✅ CHOSEN** | **91.00%** | **90.64%** | **92.37%** | **91.49%** | **0.9724** |
-| 4 | Gradient Boosting | 90.60% | 89.96% | 92.37% | 91.15% | 0.9704 |
-| 5 | Naive Bayes | 89.60% | 88.60% | 91.98% | 90.26% | 0.9643 |
-| 6 | Decision Tree (depth=8) | 84.00% | 82.50% | 88.17% | 85.24% | 0.8712 |
-| 7 | Support Vector Machine (RBF) | 83.00% | 81.95% | 86.64% | 84.23% | 0.9091 |
-| 8 | K-Nearest Neighbors (k=5) | 76.80% | 76.84% | 79.77% | 78.28% | 0.8463 |
+> Tested on **`students.csv` — 253 real student records** | 80/20 split | seed=42
 
-### Why Random Forest was selected over Logistic Regression (higher accuracy)?
+| Rank | Algorithm | Accuracy | Precision | Recall | F1-Score | ROC-AUC | Avg Score |
+|---|---|---|---|---|---|---|---|
+| 🏆 **1** | **Gradient Boosting ✅ CHOSEN** | **96.08%** | **96.00%** | **96.00%** | **96.00%** | **0.9754** | **96.32%** |
+| 2 | Random Forest (250 trees) | 94.12% | 92.31% | 96.00% | 94.12% | 0.9908 | 95.12% |
+| 3 | Decision Tree (depth=8) | 94.12% | 92.31% | 96.00% | 94.12% | 0.9415 | 94.14% |
+| 4 | Naive Bayes | 92.16% | 88.89% | 96.00% | 92.31% | 0.9815 | 93.50% |
+| 5 | AdaBoost (100 est.) | 92.16% | 95.65% | 88.00% | 91.67% | 0.9877 | 93.25% |
+| 6 | Logistic Regression | 92.16% | 95.65% | 88.00% | 91.67% | 0.9815 | 93.13% |
+| 7 | K-Nearest Neighbors (k=5) | 92.16% | 95.65% | 88.00% | 91.67% | 0.9523 | 92.54% |
+| 8 | Support Vector Machine (RBF) | 90.20% | 91.67% | 88.00% | 89.80% | 0.9738 | 91.41% |
 
-| Criterion | Logistic Regression | **Random Forest (Selected)** |
+> **Selection method**: Average of ALL 5 metrics (Accuracy + Precision + Recall + F1 + AUC) — highest combined score = winner.
+
+### 🏆 Why Gradient Boosting was selected:
+
+| Criterion | Random Forest | **Gradient Boosting (Selected)** |
 |---|---|---|
-| Handles non-linear features | ❌ No | ✅ Yes |
-| Native Feature Importance | ❌ No | ✅ Yes (Gini per tree) |
-| Requires Feature Scaling | ✅ Yes | ❌ No |
-| Overfitting Resistance | Medium | **High — Ensemble bagging** |
-| Explainability for students | Low | **High — voting transparency** |
+| Accuracy | 94.12% | **96.08%** ✅ |
+| Precision | 92.31% | **96.00%** ✅ |
+| Recall | 96.00% | **96.00%** ✅ |
+| F1-Score | 94.12% | **96.00%** ✅ |
+| Avg Combined Score | 95.12% | **96.32%** ✅ |
+| Overfitting resistance | High | **Very High** |
+| Training strategy | Parallel (independent trees) | **Sequential (error correction)** |
 
-> **Key reason**: Random Forest natively produces **Gini feature importance rankings** — this is the core of our Skill Gap Matrix and Factor Dashboard. Logistic Regression cannot do this without extra post-processing.
+> Gradient Boosting builds trees **sequentially** — each tree corrects the **mistakes** of the previous tree. This produces the highest accuracy, precision, recall, and F1 simultaneously.
 
-### Chosen Model Configuration (Random Forest):
-- **Trees**: 250 estimators (Gini impurity criterion)
-- **Max Depth**: 12 (prevents overfitting)
-- **Class Weight**: Balanced (handles minority class)
-- **Min Samples Split**: 4 · **Min Samples Leaf**: 2
+### Confusion Matrix (Gradient Boosting — Test set of 51 students):
 
-### Top Feature Importance (Gini Impurity — Random Forest):
+```
+                   Predicted: Not Ready    Predicted: Ready
+Actual: Not Ready       25 (TN) ✅              1 (FP)
+Actual: Ready            1 (FN)             24 (TP) ✅
+```
+> Only **2 wrong predictions out of 51 students** — extremely high reliability!
 
-| Rank | Feature | Weight | Campus Role |
+### Feature Importance (Gradient Boosting — Gini):
+
+| Rank | Feature | Weight | Campus Impact |
 |---|---|---|---|
-| 1 | Academic CGPA | **25.18%** | Primary eligibility gate (6.5–7.5 cutoff) |
-| 2 | Technical Score | **18.82%** | Technical interview round |
-| 3 | Coding / DSA | **16.76%** | First-round eliminator test |
-| 4 | Active Backlogs | **12.57%** | Binary disqualifier at 80%+ drives |
-| 5 | Aptitude & Reasoning | **6.67%** | Online assessment round |
-| 6 | Industry Internships | **6.08%** | Shortlisting differentiator |
-| 7 | Communication & HR | **5.78%** | GD + HR round |
-| 8 | Practical Projects | **4.92%** | Resume depth |
-| 9 | Certifications | **3.22%** | Supporting factor |
+| 1 | Academic CGPA | **77.91%** | Primary eligibility gate (dominant factor) |
+| 2 | Active Backlogs | **7.26%** | Binary disqualifier at 80%+ drives |
+| 3 | Certifications | **4.45%** | Domain specialization proof |
+| 4 | Communication & HR | **2.87%** | GD + HR interview round |
+| 5 | Aptitude & Reasoning | **2.84%** | Online assessment cutoffs |
+| 6 | Coding / DSA | **2.44%** | First-round eliminator test |
+| 7 | Technical Score | **1.18%** | Technical interview |
+| 8 | Practical Projects | **1.06%** | Resume depth |
+| 9 | Industry Internships | **0.00%** | Low variance in current dataset |
 
 ### Speaking Script (90 seconds)
-> *"We benchmarked 8 different machine learning algorithms under identical conditions on the same dataset. Logistic Regression achieved the highest raw accuracy at 93.4%, followed by AdaBoost at 92%. However, we selected Random Forest as our final model for three critical reasons: First, it natively generates Gini-based feature importance rankings — this powers our entire Skill Gap Matrix and the Influential Factors chart in the dashboard. Second, it handles non-linear skill interactions without feature scaling. Third, the ensemble of 250 trees provides high overfitting resistance. The Random Forest achieved 91% accuracy and an ROC-AUC of 0.9724 — strong and production-ready performance. Feature importance reveals that while CGPA dominates at 25%, technical knowledge and coding together account for 35% of placement decisions, and even a single backlog severely impacts eligibility."*
+> *"We benchmarked all 8 machine learning algorithms — Decision Tree, KNN, SVM, Naive Bayes, Logistic Regression, AdaBoost, Random Forest, and Gradient Boosting — under identical conditions on the same 253 real student records. We computed 5 metrics per model: Accuracy, Precision, Recall, F1-Score, and ROC-AUC. Our winner was selected by the highest combined average score across ALL 5 metrics. Gradient Boosting won with 96.08% accuracy, 96% precision, 96% recall, 96% F1-score, and an average combined score of 96.32%. Its confusion matrix shows only 2 wrong predictions out of 51 test students. Gradient Boosting outperforms because it builds trees sequentially — each tree corrects the errors of the previous one — unlike Random Forest which builds trees independently in parallel."*
 
 ---
 

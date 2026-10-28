@@ -87,46 +87,49 @@ The **live ML API uses `students.csv`** — curated with 9 granular, actionable 
 
 ---
 
-## 🤖 Model Comparison — All Algorithms Tested
+## 🤖 Model Comparison — All 8 Algorithms Benchmarked
 
-> Trained on **2,500 synthetic profiles** (80% train / 20% test, stratified split, seed=42)
+> Trained on **`students.csv` — 253 real student records** (80% train / 20% test, stratified, seed=42)
 
-| Rank | Algorithm | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
-|---|---|---|---|---|---|---|
-| 1 | Logistic Regression | **93.40%** | 91.34% | 96.56% | 93.88% | **0.9844** |
-| 2 | AdaBoost (100 estimators) | 92.00% | 90.22% | 95.04% | 92.57% | 0.9819 |
-| 🏆 3 | **Random Forest (250 trees)** | **91.00%** | **90.64%** | **92.37%** | **91.49%** | **0.9724** |
-| 4 | Gradient Boosting | 90.60% | 89.96% | 92.37% | 91.15% | 0.9704 |
-| 5 | Naive Bayes | 89.60% | 88.60% | 91.98% | 90.26% | 0.9643 |
-| 6 | Decision Tree (depth=8) | 84.00% | 82.50% | 88.17% | 85.24% | 0.8712 |
-| 7 | Support Vector Machine (RBF) | 83.00% | 81.95% | 86.64% | 84.23% | 0.9091 |
-| 8 | K-Nearest Neighbors (k=5) | 76.80% | 76.84% | 79.77% | 78.28% | 0.8463 |
+| Rank | Algorithm | Accuracy | Precision | Recall | F1-Score | ROC-AUC | Avg Score |
+|---|---|---|---|---|---|---|---|
+| 🏆 **1** | **Gradient Boosting (CHOSEN)** | **96.08%** | **96.00%** | **96.00%** | **96.00%** | **0.9754** | **96.32%** |
+| 2 | Random Forest (250 trees) | 94.12% | 92.31% | 96.00% | 94.12% | 0.9908 | 95.12% |
+| 3 | Decision Tree (depth=8) | 94.12% | 92.31% | 96.00% | 94.12% | 0.9415 | 94.14% |
+| 4 | Naive Bayes | 92.16% | 88.89% | 96.00% | 92.31% | 0.9815 | 93.50% |
+| 5 | AdaBoost (100 est.) | 92.16% | 95.65% | 88.00% | 91.67% | 0.9877 | 93.25% |
+| 6 | Logistic Regression | 92.16% | 95.65% | 88.00% | 91.67% | 0.9815 | 93.13% |
+| 7 | K-Nearest Neighbors (k=5) | 92.16% | 95.65% | 88.00% | 91.67% | 0.9523 | 92.54% |
+| 8 | Support Vector Machine (RBF) | 90.20% | 91.67% | 88.00% | 89.80% | 0.9738 | 91.41% |
 
-### 🏆 Why Random Forest was chosen (over Logistic Regression):
+> **Winner selected by:** Average of all 5 metrics (Accuracy + Precision + Recall + F1 + AUC) — highest combined score wins.
 
-| Criterion | Logistic Regression | **Random Forest** |
+### 🏆 Why Gradient Boosting was chosen:
+
+| Criterion | Random Forest | **Gradient Boosting (Winner)** |
 |---|---|---|
-| Accuracy | 93.40% | 91.00% |
-| Handles non-linear features | ❌ No | ✅ Yes |
-| Feature Importance (native) | ❌ No | ✅ Yes (Gini) |
-| Requires feature scaling | ✅ Yes (preprocessing needed) | ❌ No |
-| Overfitting resistance | Medium | **High (ensemble)** |
-| Interpretability for education | Low | **High (tree voting)** |
+| Accuracy | 94.12% | **96.08%** |
+| Precision | 92.31% | **96.00%** |
+| Recall | 96.00% | **96.00%** |
+| F1-Score | 94.12% | **96.00%** |
+| Combined Avg Score | 95.12% | **96.32%** |
+| Overfitting resistance | High | **Very High (sequential correction)** |
+| Handles imbalance | Yes | **Yes (staged boosting)** |
 
-> While Logistic Regression has slightly higher accuracy, **Random Forest** was selected because it natively provides **feature importance rankings** (showing students which skill matters most), handles non-linear skill interactions, and is more robust without feature normalization.
+> Gradient Boosting builds trees **sequentially** — each tree corrects the errors of the previous one. This gives it superior accuracy and precision compared to Random Forest which builds trees in parallel independently.
 
-### 📊 Top Feature Importance (Gini Impurity — Random Forest)
+### 📊 Feature Importance (Gradient Boosting — Gini)
 
 ```
-CGPA (Academic)          ████████████████████████░  25.18%  ← Primary eligibility gate
-Technical Score          ██████████████████░░░░░░░  18.82%  ← Tech interview round
-Coding / DSA             ████████████████░░░░░░░░░  16.76%  ← First-round eliminator
-Active Backlogs          ████████████░░░░░░░░░░░░░  12.57%  ← Binary disqualifier
-Aptitude & Reasoning     ██████░░░░░░░░░░░░░░░░░░░   6.67%  ← Online assessment
-Industry Internships     ██████░░░░░░░░░░░░░░░░░░░   6.08%  ← Differentiator
-Communication & HR       █████░░░░░░░░░░░░░░░░░░░░   5.78%  ← GD + HR round
-Practical Projects       █████░░░░░░░░░░░░░░░░░░░░   4.92%  ← Resume depth
-Certifications           ███░░░░░░░░░░░░░░░░░░░░░░   3.22%  ← Supporting factor
+cgpa                     #####################################  77.91%  ← Dominant eligibility gate
+backlogs                 ###                                    7.26%  ← Binary disqualifier
+certifications           ##                                     4.45%  ← Domain proof
+communication_score      #                                      2.87%  ← HR round
+aptitude_score           #                                      2.84%  ← Online assessment
+coding_score             #                                      2.44%  ← First eliminator
+technical_score                                                 1.18%  ← Tech interview
+projects                                                        1.06%  ← Resume depth
+internships                                                     0.00%  ← Low variance in data
 ```
 
 ---
