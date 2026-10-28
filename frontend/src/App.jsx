@@ -576,7 +576,7 @@ export default function App() {
                 {activeTab === 'factors' && prediction && (
                   <div>
                     <div style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      Global Feature Importance (Gini importance from 250 Random Forest trees):
+                      Global Feature Importance (Gradient Boosting Ensemble — 96.08% Accuracy):
                     </div>
                     <div className="chart-container">
                       <ResponsiveContainer width="100%" height="100%">

@@ -59,7 +59,7 @@ An end-to-end **Machine Learning web application** designed to evaluate a studen
 | Feature | Description |
 |---|---|
 | 🎛️ **Competency Matrix Dashboard** | Interactive sliders for 9 student parameters with live sync |
-| 🤖 **ML Inference Engine** | Random Forest (250 trees) with 91% accuracy & 0.97 AUC |
+| 🤖 **ML Inference Engine** | Gradient Boosting Classifier with **96.08% accuracy**, **96% F1-score**, and **0.9754 ROC-AUC** (Top performer across 8 models) |
 | 🔍 **Skill Gap Matrix** | Compares student params against placement cutoffs |
 | 🗺️ **Action Roadmap** | Prioritized 30–60 day improvement plans |
 | 📄 **Report Export** | Print-optimized diagnostic scorecard |
@@ -315,7 +315,7 @@ curl -X POST http://127.0.0.1:5000/api/predict \
 | **Frontend** | React 18, Vite, Recharts, Lucide Icons |
 | **Backend** | Python 3.10, Flask, Flask-CORS |
 | **ML Library** | Scikit-learn, NumPy, Pandas |
-| **Model** | Random Forest Classifier (250 estimators) |
+| **Model** | Gradient Boosting Classifier (96.08% accuracy, 96% F1-score) |
 | **Styling** | Custom CSS with dark theme |
 | **API** | RESTful JSON API |
 

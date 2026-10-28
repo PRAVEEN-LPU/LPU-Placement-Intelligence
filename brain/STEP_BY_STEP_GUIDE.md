@@ -4,14 +4,14 @@
 ---
 
 **Platform**: LPU Placement Intelligence & Student Readiness Prediction  
-**Stack**: Python 3.12 · Flask · scikit-learn Random Forest · React 18 · Vite · Recharts  
+**Stack**: Python 3.12 · Flask · scikit-learn Gradient Boosting · React 18 · Vite · Recharts  
 **Current Status**: ✅ All modules complete and running  
 
 | Service | Address | Status |
 |---|---|---|
 | Flask ML API | `http://127.0.0.1:5000` | 🟢 Running |
 | React Dashboard | `http://localhost:5173` | 🟢 Running |
-| Trained Model | `backend/placement_model.joblib` | 🟢 Accuracy 91.00% |
+| Trained Model | `backend/placement_model.joblib` | 🟢 Gradient Boosting (Accuracy 96.08%) |
 
 ---
 

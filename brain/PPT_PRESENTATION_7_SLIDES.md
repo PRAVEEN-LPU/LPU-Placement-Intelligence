@@ -54,14 +54,14 @@
    - CORS-enabled REST endpoints (`/api/health`, `/api/model-info`, `/api/predict`).
    - Strict boundary validation engine (verifies all 9 input dimensions).
 3. **Machine Learning Inference Engine**
-   - Serialized Random Forest classifier (`placement_model.joblib`).
+   - Serialized Gradient Boosting classifier (`placement_model.joblib`) — selected as the top-performing algorithm across 8 benchmarked models with **96.08% accuracy** and **96.00% F1-score**.
    - Probability estimator (`predict_proba`) mapped to a 0–100 Readiness Score.
 4. **Diagnostic & Prescriptive Engines**
    - 8-Dimension Skill Gap Matrix comparing student metrics against institutional cutoffs.
    - Prescriptive Engine generating priority-ranked remedial action items.
 
 ### Speaking Script (60–90 seconds)
-> *"Here is our system architecture. The user inputs their academic and skill profile through our React dashboard. The frontend communicates with our Flask REST API. The API validates the inputs against strict boundary checks and queries our pre-trained Random Forest model. In parallel, the Diagnostic Engine evaluates the profile against 8 institutional benchmarks, and the Prescriptive Engine generates a tailored roadmap. All of this executes in under 50 milliseconds."*
+> *"Here is our system architecture. The user inputs their academic and skill profile through our React dashboard. The frontend communicates with our Flask REST API. The API validates the inputs against strict boundary checks and queries our pre-trained Gradient Boosting model (winner across 8 benchmarked algorithms with 96.08% accuracy). In parallel, the Diagnostic Engine evaluates the profile against 8 institutional benchmarks, and the Prescriptive Engine generates a tailored roadmap. All of this executes in under 50 milliseconds."*
 
 ---
 
@@ -185,8 +185,8 @@ Actual: Ready            1 (FN)             24 (TP) ✅
 
 ### Project Summary
 - Successfully engineered an end-to-end intelligent placement decision-support system.
-- High accuracy (94.12%) with multi-dimensional, actionable, and fair evaluation.
-- Fully verified codebase: Flask REST API, React UI, dual datasets, and automated test suite.
+- Highest benchmark accuracy (**96.08%**) and **96.00% F1-score** achieved via Gradient Boosting across 8 algorithms.
+- Fully verified codebase: Flask REST API, React UI, 7 dataset repository, and automated test suite.
 
 ### Future Scope & Scalability
 - **Resume & GitHub Parsing**: Automatically extract projects, skills, and certifications via NLP and APIs.
@@ -194,10 +194,10 @@ Actual: Ready            1 (FN)             24 (TP) ✅
 - **Company-Specific Benchmarks**: Custom eligibility models for Tier-1 Product firms vs. Mass recruiters.
 
 ### Viva Defense Q&A Preparation:
-- **Q**: *Why Random Forest over Logistic Regression or Deep Learning?*  
-  **A**: Handles non-linear interactions, robust to outliers, doesn't require feature scaling, and provides native feature importance without overfitting on tabular data.
+- **Q**: *Why Gradient Boosting over Random Forest, Logistic Regression or Deep Learning?*  
+  **A**: Gradient Boosting builds trees sequentially, where each successive estimator directly corrects the residual errors of preceding trees. In our 8-algorithm benchmark, Gradient Boosting achieved the highest overall score (96.08% accuracy, 96.00% F1, 0.9754 ROC-AUC, with only 2 misclassifications out of 51 test samples), whereas Random Forest achieved 94.12% and Logistic Regression 92.16%.
 - **Q**: *How do you handle class imbalance?*  
-  **A**: Stratified train/test splitting and `class_weight='balanced'` in scikit-learn.
+  **A**: Stratified train/test splitting and parameter optimization in scikit-learn to preserve minority class ratios.
 
 ### Speaking Script (45–60 seconds)
-> *"In conclusion, our platform transforms placement preparation from reactive anxiety into proactive, structured self-improvement. It equips institutions and students with precise, data-driven insights. In future work, we plan to incorporate automated resume parsing and AI-driven mock interviews. Thank you, and we welcome any questions from the panel."*
+> *"In conclusion, our platform transforms placement preparation from reactive anxiety into proactive, structured self-improvement. It equips institutions and students with precise, data-driven insights powered by our 96.08% accurate Gradient Boosting model. In future work, we plan to incorporate automated resume parsing and AI-driven mock interviews. Thank you, and we welcome any questions from the panel."*
