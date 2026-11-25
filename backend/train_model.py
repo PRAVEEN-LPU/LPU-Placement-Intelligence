@@ -1,87 +1,51 @@
-"""
+r"""
 Model Training Script — LPU Placement Intelligence Platform
 
 Priority order for training data:
   1. dataset/students.csv  (manually curated records, preferred)
-  2. Synthetic generator   (fallback if CSV not found)
+  2. No fallback: missing or invalid canonical data is an error.
 
 Run from the backend/ directory:
   .venv\Scripts\python.exe train_model.py
 """
 
+import argparse
 import os
-import sys
-import pandas as pd
-from model import (
-    train_placement_model,
-    generate_synthetic_student_data,
-    FEATURE_NAMES,
-)
 
-DATASET_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "dataset", "students.csv"
-)
+import pandas as pd
+
+from data_pipeline import load_primary_dataset
+from model import FEATURE_NAMES, train_placement_model
+
+DATASET_PATH = os.path.join(os.path.dirname(__file__), "..", "dataset", "students.csv")
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "placement_model.joblib")
 
 
-def load_dataset() -> tuple[pd.DataFrame, str]:
-    """
-    Attempts to load the manually curated CSV dataset.
-    Falls back to synthetic generation if the file is not found or invalid.
-
-    Returns
-    -------
-    (dataframe, source_label)
-    """
-    if os.path.exists(DATASET_PATH):
-        try:
-            df = pd.read_csv(DATASET_PATH)
-
-            required_cols = FEATURE_NAMES + ["placement_ready"]
-            missing = [c for c in required_cols if c not in df.columns]
-            if missing:
-                raise ValueError(
-                    f"CSV is missing required columns: {missing}"
-                )
-
-            # Drop rows with any nulls in required columns
-            before = len(df)
-            df = df[required_cols].dropna()
-            after = len(df)
-
-            if after < 50:
-                raise ValueError(
-                    f"Dataset has only {after} valid rows after cleaning — too few to train."
-                )
-
-            dropped = before - after
-            source = f"dataset/students.csv  ({after} records"
-            if dropped:
-                source += f", {dropped} rows dropped due to missing values"
-            source += ")"
-            return df, source
-
-        except Exception as exc:
-            print(f"\n[WARNING] Could not load dataset/students.csv: {exc}")
-            print("[WARNING] Falling back to synthetic data generator.\n")
-
-    # Fallback: synthetic generator
-    df = generate_synthetic_student_data(n_samples=2500, random_state=42)
-    return df, "Synthetic generator (dataset/students.csv not found or invalid)"
+def load_dataset(deduplicate_exact: bool = False) -> tuple[pd.DataFrame, str]:
+    """Load the canonical primary dataset without silent fallback."""
+    df, metadata = load_primary_dataset(deduplicate_exact=deduplicate_exact)
+    return df, f"{metadata['path']} ({metadata['rows']} records, SHA-256 {metadata['sha256']})"
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--deduplicate-exact",
+        action="store_true",
+        help="Explicitly remove exact duplicate rows after recording the count.",
+    )
+    args = parser.parse_args()
     print("=" * 70)
     print("  LPU Placement Intelligence Platform — Model Training Pipeline   ")
     print("=" * 70)
 
     # ── Step 1: Load data ──────────────────────────────────────────────────
     print("\nStep 1 — Loading training data ...")
-    data_df, source_label = load_dataset()
+    data_df, source_label = load_dataset(deduplicate_exact=args.deduplicate_exact)
     print(f"         Source  : {source_label}")
     print(f"         Shape   : {data_df.shape[0]} rows × {data_df.shape[1]} columns")
     print(f"         Features: {', '.join(FEATURE_NAMES)}")
-    print(f"         Label   : placement_ready")
+    print("         Label   : placement_ready")
     print(
         f"         Class split: "
         f"{int(data_df['placement_ready'].sum())} ready "
@@ -90,7 +54,9 @@ def main():
 
     # ── Step 2: Train ─────────────────────────────────────────────────────
     print("\nStep 2 — Splitting dataset (80% train / 20% test, stratified) ...")
-    print("Step 3 — Training Gradient Boosting Classifier (200 estimators, max_depth=5, lr=0.1) ...")
+    print(
+        "Step 3 — Training Gradient Boosting Classifier (200 estimators, max_depth=5, lr=0.1) ..."
+    )
 
     payload = train_placement_model(data_df=data_df, save_path=MODEL_PATH)
     metrics = payload["metrics"]
@@ -110,9 +76,7 @@ def main():
     print("-" * 70)
 
     print("\n  Top Feature Importance (Gini, normalized):")
-    for rank, (feat, imp) in enumerate(
-        list(payload["feature_importance"].items())[:9], start=1
-    ):
+    for rank, (feat, imp) in enumerate(list(payload["feature_importance"].items())[:9], start=1):
         bar = "#" * int(imp / 2)
         print(f"  {rank:>2}. {feat:<22} {bar:<25} {imp:5.2f}%")
 

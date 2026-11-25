@@ -4,18 +4,19 @@ Core Machine Learning Logic, Synthetic Data Generation, and Explainability Engin
 """
 
 import os
+from datetime import datetime
+
 import joblib
 import numpy as np
 import pandas as pd
-from datetime import datetime
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import (
     accuracy_score,
+    confusion_matrix,
+    f1_score,
     precision_score,
     recall_score,
-    f1_score,
     roc_auc_score,
-    confusion_matrix,
 )
 from sklearn.model_selection import train_test_split
 
@@ -55,6 +56,18 @@ TARGET_THRESHOLDS = {
     "internships": 1,
     "certifications": 2,
     "backlogs": 0,
+}
+
+FEATURE_BOUNDS = {
+    "cgpa": (0.0, 10.0),
+    "technical_score": (0, 100),
+    "aptitude_score": (0, 100),
+    "communication_score": (0, 100),
+    "coding_score": (0, 100),
+    "projects": (0, 30),
+    "internships": (0, 15),
+    "certifications": (0, 30),
+    "backlogs": (0, 20),
 }
 
 
@@ -122,33 +135,40 @@ def generate_synthetic_student_data(n_samples: int = 2500, random_state: int = 4
     prob = 1.0 / (1.0 + np.exp(-z))
     placement_ready = (prob >= 0.50).astype(int)
 
-    df = pd.DataFrame({
-        "cgpa": cgpa,
-        "technical_score": technical_score,
-        "aptitude_score": aptitude_score,
-        "communication_score": communication_score,
-        "coding_score": coding_score,
-        "projects": projects,
-        "internships": internships,
-        "certifications": certifications,
-        "backlogs": backlogs,
-        "placement_ready": placement_ready,
-    })
+    df = pd.DataFrame(
+        {
+            "cgpa": cgpa,
+            "technical_score": technical_score,
+            "aptitude_score": aptitude_score,
+            "communication_score": communication_score,
+            "coding_score": coding_score,
+            "projects": projects,
+            "internships": internships,
+            "certifications": certifications,
+            "backlogs": backlogs,
+            "placement_ready": placement_ready,
+        }
+    )
 
     return df
 
 
-def train_placement_model(data_df: pd.DataFrame = None, save_path: str = "placement_model.joblib") -> dict:
+def train_placement_model(
+    data_df: pd.DataFrame = None, save_path: str = "placement_model.joblib"
+) -> dict:
     """
-    Trains a Gradient Boosting classifier (benchmark winner with 96.08% accuracy & 96% F1)
-    on student readiness features and saves the model artifact.
+    Trains the approved Gradient Boosting classifier on the canonical readiness
+    dataset and saves the model artifact. Evaluation results are reported by
+    compare_models.py using repeated cross-validation.
     """
     if data_df is None:
         csv_path = os.path.join(os.path.dirname(__file__), "..", "dataset", "students.csv")
-        if os.path.exists(csv_path):
-            data_df = pd.read_csv(csv_path)
-        else:
-            data_df = generate_synthetic_student_data(n_samples=2500, random_state=42)
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(
+                f"Canonical training dataset '{csv_path}' was not found. "
+                "Synthetic fallback is disabled for production training."
+            )
+        data_df = pd.read_csv(csv_path)
 
     X = data_df[FEATURE_NAMES]
     y = data_df["placement_ready"]
@@ -180,13 +200,13 @@ def train_placement_model(data_df: pd.DataFrame = None, save_path: str = "placem
         "test_rows": len(y_test),
         "train_rows": len(y_train),
         "model_name": "Gradient Boosting",
-        "data_note": "Model: Gradient Boosting Classifier (96.08% Accuracy, 96% F1). Trained on LPU placement dataset.",
+        "data_note": "Educational prototype trained against the project dataset label; source provenance and alignment with actual LPU placement outcomes are unverified.",
     }
 
     # Calculate global feature importance
     importance_map = {}
     total_imp = sum(clf.feature_importances_)
-    for f, imp in zip(FEATURE_NAMES, clf.feature_importances_):
+    for f, imp in zip(FEATURE_NAMES, clf.feature_importances_, strict=False):
         importance_map[f] = round(float(imp / total_imp) * 100, 2)
 
     # Sort descending
@@ -213,7 +233,9 @@ def load_model(model_path: str = "placement_model.joblib") -> dict:
     Loads saved model artifact dictionary.
     """
     if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file '{model_path}' not found. Please run train_model.py first.")
+        raise FileNotFoundError(
+            f"Model file '{model_path}' not found. Please run train_model.py first."
+        )
     return joblib.load(model_path)
 
 
@@ -230,7 +252,12 @@ def validate_student_input(data: dict) -> tuple[bool, str | dict]:
         "cgpa": (0.0, 10.0, float, "CGPA must be a number between 0.0 and 10.0"),
         "technical_score": (0, 100, int, "Technical score must be an integer between 0 and 100"),
         "aptitude_score": (0, 100, int, "Aptitude score must be an integer between 0 and 100"),
-        "communication_score": (0, 100, int, "Communication score must be an integer between 0 and 100"),
+        "communication_score": (
+            0,
+            100,
+            int,
+            "Communication score must be an integer between 0 and 100",
+        ),
         "coding_score": (0, 100, int, "Coding score must be an integer between 0 and 100"),
         "projects": (0, 30, int, "Projects must be an integer between 0 and 30"),
         "internships": (0, 15, int, "Internships must be an integer between 0 and 15"),
@@ -252,14 +279,15 @@ def validate_student_input(data: dict) -> tuple[bool, str | dict]:
     return True, sanitized
 
 
-def calculate_skill_gaps(student: dict) -> list[dict]:
+def calculate_skill_gaps(student: dict, thresholds: dict | None = None) -> list[dict]:
     """
     Evaluates individual student skills against institutional placement benchmarks.
     """
+    thresholds = thresholds or TARGET_THRESHOLDS
     gaps = []
 
     # 1. CGPA
-    cgpa_target = TARGET_THRESHOLDS["cgpa"]
+    cgpa_target = thresholds["cgpa"]
     cgpa_val = student["cgpa"]
     if cgpa_val >= cgpa_target:
         cgpa_status = "Target Met"
@@ -271,21 +299,25 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         severity = "warning"
     else:
         cgpa_status = "Critical Gap"
-        cgpa_action = "Urgent academic focus needed. Minimum 6.5-7.0 CGPA required for 75%+ campus drives."
+        cgpa_action = (
+            "Urgent academic focus needed. Minimum 6.5-7.0 CGPA required for 75%+ campus drives."
+        )
         severity = "critical"
 
-    gaps.append({
-        "skill": "Academic Performance (CGPA)",
-        "current": cgpa_val,
-        "target": cgpa_target,
-        "unit": "Scale 0-10",
-        "status": cgpa_status,
-        "severity": severity,
-        "action": cgpa_action,
-    })
+    gaps.append(
+        {
+            "skill": "Academic Performance (CGPA)",
+            "current": cgpa_val,
+            "target": cgpa_target,
+            "unit": "Scale 0-10",
+            "status": cgpa_status,
+            "severity": severity,
+            "action": cgpa_action,
+        }
+    )
 
     # 2. Coding Proficiency
-    coding_target = TARGET_THRESHOLDS["coding_score"]
+    coding_target = thresholds["coding_score"]
     coding_val = student["coding_score"]
     if coding_val >= coding_target:
         coding_status = "Target Met"
@@ -293,29 +325,37 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         severity = "met"
     elif coding_val >= 55:
         coding_status = "Moderate Gap"
-        coding_action = "Complete 2 medium DSA problems daily on LeetCode/HackerRank (focus on Trees & DP)."
+        coding_action = (
+            "Complete 2 medium DSA problems daily on LeetCode/HackerRank (focus on Trees & DP)."
+        )
         severity = "warning"
     else:
         coding_status = "Critical Gap"
-        coding_action = "Initiate a 60-day structured DSA roadmap: Arrays, Strings, Hashmaps, Recursion."
+        coding_action = (
+            "Initiate a 60-day structured DSA roadmap: Arrays, Strings, Hashmaps, Recursion."
+        )
         severity = "critical"
 
-    gaps.append({
-        "skill": "Coding Proficiency",
-        "current": coding_val,
-        "target": coding_target,
-        "unit": "%",
-        "status": coding_status,
-        "severity": severity,
-        "action": coding_action,
-    })
+    gaps.append(
+        {
+            "skill": "Coding Proficiency",
+            "current": coding_val,
+            "target": coding_target,
+            "unit": "%",
+            "status": coding_status,
+            "severity": severity,
+            "action": coding_action,
+        }
+    )
 
     # 3. Technical Skills
-    tech_target = TARGET_THRESHOLDS["technical_score"]
+    tech_target = thresholds["technical_score"]
     tech_val = student["technical_score"]
     if tech_val >= tech_target:
         tech_status = "Target Met"
-        tech_action = "Deepen specialized domain knowledge (Cloud, Microservices, or ML/AI architectures)."
+        tech_action = (
+            "Deepen specialized domain knowledge (Cloud, Microservices, or ML/AI architectures)."
+        )
         severity = "met"
     elif tech_val >= 55:
         tech_status = "Moderate Gap"
@@ -323,21 +363,25 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         severity = "warning"
     else:
         tech_status = "Critical Gap"
-        tech_action = "Revisit Object-Oriented Programming (Java/C++/Python) and Database query writing."
+        tech_action = (
+            "Revisit Object-Oriented Programming (Java/C++/Python) and Database query writing."
+        )
         severity = "critical"
 
-    gaps.append({
-        "skill": "Technical Knowledge",
-        "current": tech_val,
-        "target": tech_target,
-        "unit": "%",
-        "status": tech_status,
-        "severity": severity,
-        "action": tech_action,
-    })
+    gaps.append(
+        {
+            "skill": "Technical Knowledge",
+            "current": tech_val,
+            "target": tech_target,
+            "unit": "%",
+            "status": tech_status,
+            "severity": severity,
+            "action": tech_action,
+        }
+    )
 
     # 4. Aptitude & Reasoning
-    apt_target = TARGET_THRESHOLDS["aptitude_score"]
+    apt_target = thresholds["aptitude_score"]
     apt_val = student["aptitude_score"]
     if apt_val >= apt_target:
         apt_status = "Target Met"
@@ -352,18 +396,20 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         apt_action = "Start daily 45-minute timed aptitude drills using IndiaBIX or Prepleet tests."
         severity = "critical"
 
-    gaps.append({
-        "skill": "Aptitude & Reasoning",
-        "current": apt_val,
-        "target": apt_target,
-        "unit": "%",
-        "status": apt_status,
-        "severity": severity,
-        "action": apt_action,
-    })
+    gaps.append(
+        {
+            "skill": "Aptitude & Reasoning",
+            "current": apt_val,
+            "target": apt_target,
+            "unit": "%",
+            "status": apt_status,
+            "severity": severity,
+            "action": apt_action,
+        }
+    )
 
     # 5. Communication Skills
-    comm_target = TARGET_THRESHOLDS["communication_score"]
+    comm_target = thresholds["communication_score"]
     comm_val = student["communication_score"]
     if comm_val >= comm_target:
         comm_status = "Target Met"
@@ -375,21 +421,25 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         severity = "warning"
     else:
         comm_status = "Critical Gap"
-        comm_action = "Practice mock HR interviews; focus on structured self-introduction and articulation."
+        comm_action = (
+            "Practice mock HR interviews; focus on structured self-introduction and articulation."
+        )
         severity = "critical"
 
-    gaps.append({
-        "skill": "Communication & HR Fit",
-        "current": comm_val,
-        "target": comm_target,
-        "unit": "%",
-        "status": comm_status,
-        "severity": severity,
-        "action": comm_action,
-    })
+    gaps.append(
+        {
+            "skill": "Communication & HR Fit",
+            "current": comm_val,
+            "target": comm_target,
+            "unit": "%",
+            "status": comm_status,
+            "severity": severity,
+            "action": comm_action,
+        }
+    )
 
     # 6. Projects
-    proj_target = TARGET_THRESHOLDS["projects"]
+    proj_target = thresholds["projects"]
     proj_val = student["projects"]
     if proj_val >= proj_target:
         proj_status = "Target Met"
@@ -404,18 +454,20 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         proj_action = "Immediately build at least 2 end-to-end deployed projects to substantiate resume claims."
         severity = "critical"
 
-    gaps.append({
-        "skill": "Practical Projects",
-        "current": proj_val,
-        "target": proj_target,
-        "unit": "projects",
-        "status": proj_status,
-        "severity": severity,
-        "action": proj_action,
-    })
+    gaps.append(
+        {
+            "skill": "Practical Projects",
+            "current": proj_val,
+            "target": proj_target,
+            "unit": "projects",
+            "status": proj_status,
+            "severity": severity,
+            "action": proj_action,
+        }
+    )
 
     # 7. Internships
-    intern_target = TARGET_THRESHOLDS["internships"]
+    intern_target = thresholds["internships"]
     intern_val = student["internships"]
     if intern_val >= intern_target:
         intern_status = "Target Met"
@@ -426,42 +478,88 @@ def calculate_skill_gaps(student: dict) -> list[dict]:
         intern_action = "Apply for summer internships via LPU Career Portal or contribute to open-source GitHub projects."
         severity = "warning"
 
-    gaps.append({
-        "skill": "Industry Internship",
-        "current": intern_val,
-        "target": intern_target,
-        "unit": "internships",
-        "status": intern_status,
-        "severity": severity,
-        "action": intern_action,
-    })
+    gaps.append(
+        {
+            "skill": "Industry Internship",
+            "current": intern_val,
+            "target": intern_target,
+            "unit": "internships",
+            "status": intern_status,
+            "severity": severity,
+            "action": intern_action,
+        }
+    )
 
     # 8. Active Backlogs
-    backlog_target = TARGET_THRESHOLDS["backlogs"]
+    backlog_target = thresholds["backlogs"]
     backlog_val = student["backlogs"]
     if backlog_val == 0:
         backlog_status = "Clean Record"
-        backlog_action = "Eligible for tier-1 product and consulting companies with zero backlog criteria."
+        backlog_action = (
+            "Eligible for tier-1 product and consulting companies with zero backlog criteria."
+        )
         severity = "met"
     else:
         backlog_status = "Urgent Alert"
         backlog_action = f"{backlog_val} active backlog(s) disqualify from 80%+ campus drives. Clear during remedial exams."
         severity = "critical"
 
-    gaps.append({
-        "skill": "Backlog Status",
-        "current": backlog_val,
-        "target": backlog_target,
-        "unit": "backlogs",
-        "status": backlog_status,
-        "severity": severity,
-        "action": backlog_action,
-    })
+    gaps.append(
+        {
+            "skill": "Backlog Status",
+            "current": backlog_val,
+            "target": backlog_target,
+            "unit": "backlogs",
+            "status": backlog_status,
+            "severity": severity,
+            "action": backlog_action,
+        }
+    )
+
+    certification_target = thresholds["certifications"]
+    certification_val = student["certifications"]
+    certification_gap = max(certification_target - certification_val, 0)
+    gaps.append(
+        {
+            "skill": "Relevant Certifications",
+            "current": certification_val,
+            "target": certification_target,
+            "unit": "certifications",
+            "status": "Target Met" if certification_gap == 0 else "Certification Gap",
+            "severity": "met" if certification_gap == 0 else "warning",
+            "action": (
+                "Maintain current credentials and keep them aligned with target roles."
+                if certification_gap == 0
+                else f"Complete {certification_gap} relevant certification(s) in the target domain and add a practical project demonstrating the skill."
+            ),
+        }
+    )
+
+    for gap in gaps:
+        is_backlog = gap["skill"] == "Backlog Status"
+        gap["target_met"] = (
+            gap["current"] == gap["target"] if is_backlog else gap["current"] >= gap["target"]
+        )
+        gap["gap_delta"] = round(
+            (
+                float(gap["current"] - gap["target"])
+                if is_backlog
+                else float(gap["target"] - gap["current"])
+            ),
+            2,
+        )
+        gap["priority"] = (
+            "high"
+            if gap["severity"] == "critical"
+            else "medium" if gap["severity"] == "warning" else "low"
+        )
 
     return gaps
 
 
-def generate_personalized_recommendations(student: dict, skill_gaps: list[dict], readiness_score: int) -> list[dict]:
+def generate_personalized_recommendations(
+    student: dict, skill_gaps: list[dict], readiness_score: int
+) -> list[dict]:
     """
     Produces transparent, prioritized recommendations mapped directly to low-scoring attributes.
     """
@@ -469,154 +567,325 @@ def generate_personalized_recommendations(student: dict, skill_gaps: list[dict],
 
     # Priority 1: Backlogs
     if student["backlogs"] > 0:
-        recommendations.append({
-            "category": "Immediate Priority",
-            "priority": "High",
-            "badge": "Academic Clearance",
-            "title": "Clear Active Backlogs Before Placement Season",
-            "details": f"You currently have {student['backlogs']} pending backlog(s). Most Tier-1 companies strictly mandate zero standing backlogs at the time of online assessment registration.",
-            "action_items": [
-                "Register for immediate supplementary/remedial exams.",
-                "Consult academic mentor for schedule adjustments and attendance relaxation.",
-                "Review company eligibility criteria on LPU UMS placement portal.",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "Immediate Priority",
+                "priority": "High",
+                "badge": "Academic Clearance",
+                "title": "Review your active backlog plan",
+                "details": f"Your profile records {student['backlogs']} active backlog(s). Check the current eligibility notice for each drive; requirements vary by employer.",
+                "action_items": [
+                    "Confirm the next available assessment or remediation date with your department.",
+                    "Agree a weekly study plan with your academic mentor.",
+                    "Recheck the published eligibility notice for your target drive.",
+                ],
+            }
+        )
 
     # Priority 2: Coding Proficiency
     if student["coding_score"] < 70:
-        recommendations.append({
-            "category": "Technical Assessment",
-            "priority": "High" if student["coding_score"] < 50 else "Medium",
-            "badge": "DSA & Problem Solving",
-            "title": "Structured 45-Day Data Structures & Algorithms Sprint",
-            "details": f"Your coding score is {student['coding_score']}%. First-round eliminator tests at Amazon, TCS Digital, and Cognizant focus heavily on DSA.",
-            "action_items": [
-                "Solve Blind 75 LeetCode problems (focus: Sliding Window, Two Pointers, Trees, HashMaps).",
-                "Practice on HackerRank / CodeChef under timed 45-minute constraints.",
-                "Master language-specific libraries (C++ STL, Java Collections, or Python standard data structures).",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "Technical Assessment",
+                "priority": "High" if student["coding_score"] < 50 else "Medium",
+                "badge": "DSA & Problem Solving",
+                "title": "Structured 45-Day Data Structures & Algorithms Sprint",
+                "details": f"Your latest profile records a coding score of {student['coding_score']}%. The role profile uses a provisional coding reference; employer assessments vary.",
+                "action_items": [
+                    "Solve Blind 75 LeetCode problems (focus: Sliding Window, Two Pointers, Trees, HashMaps).",
+                    "Practice on HackerRank / CodeChef under timed 45-minute constraints.",
+                    "Master language-specific libraries (C++ STL, Java Collections, or Python standard data structures).",
+                ],
+            }
+        )
 
     # Priority 3: Aptitude & Reasoning
     if student["aptitude_score"] < 70:
-        recommendations.append({
-            "category": "Online Assessment Round",
-            "priority": "High" if student["aptitude_score"] < 50 else "Medium",
-            "badge": "Aptitude Drill",
-            "title": "Daily Speed-Math and Analytical Reasoning Routine",
-            "details": f"Aptitude score is {student['aptitude_score']}%. Most IT services and core companies require 65%+ sectional cutoff in Quantitative, Logical, and Verbal rounds.",
-            "action_items": [
-                "Practice 20 quantitative questions daily (Time & Distance, Permutations, Percentages).",
-                "Solve 2 logical reasoning sets (Syllogisms, Blood Relations, Seating Arrangements).",
-                "Take weekly mock company-pattern tests on platforms like Prepleet or IndiaBIX.",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "Online Assessment Round",
+                "priority": "High" if student["aptitude_score"] < 50 else "Medium",
+                "badge": "Aptitude Drill",
+                "title": "Daily Speed-Math and Analytical Reasoning Routine",
+                "details": f"Your latest profile records an aptitude score of {student['aptitude_score']}%. The comparison target is a project-defined practice reference, not an employer cutoff.",
+                "action_items": [
+                    "Practice 20 quantitative questions daily (Time & Distance, Permutations, Percentages).",
+                    "Solve 2 logical reasoning sets (Syllogisms, Blood Relations, Seating Arrangements).",
+                    "Take weekly mock company-pattern tests on platforms like Prepleet or IndiaBIX.",
+                ],
+            }
+        )
 
     # Priority 4: Communication & HR Fit
     if student["communication_score"] < 70:
-        recommendations.append({
-            "category": "Interview Performance",
-            "priority": "Medium",
-            "badge": "Communication & HR",
-            "title": "Mock Interview & Technical Articulation Practice",
-            "details": f"Communication score is {student['communication_score']}%. Clear articulation of technical ideas and structured HR responses are essential for final selections.",
-            "action_items": [
-                "Prepare STAR method (Situation, Task, Action, Result) answers for resume projects.",
-                "Attend departmental peer mock interviews twice weekly.",
-                "Practice 2-minute elevator pitches for 'Tell me about yourself' and 'Why this company?'.",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "Interview Performance",
+                "priority": "Medium",
+                "badge": "Communication & HR",
+                "title": "Mock Interview & Technical Articulation Practice",
+                "details": f"Communication score is {student['communication_score']}%. Clear articulation of technical ideas and structured HR responses are essential for final selections.",
+                "action_items": [
+                    "Prepare STAR method (Situation, Task, Action, Result) answers for resume projects.",
+                    "Attend departmental peer mock interviews twice weekly.",
+                    "Practice 2-minute elevator pitches for 'Tell me about yourself' and 'Why this company?'.",
+                ],
+            }
+        )
 
     # Priority 5: Projects
     if student["projects"] < 2:
-        recommendations.append({
-            "category": "Resume Enhancement",
-            "priority": "Medium",
-            "badge": "Portfolio Project",
-            "title": "Build and Deploy an Industry-Grade Capstone Project",
-            "details": "Technical interviewers evaluate architectural reasoning through personal projects.",
-            "action_items": [
-                "Build a full-stack project (e.g., MERN, Flask/React, or AI service) with live deployment.",
-                "Implement secure authentication, clean API documentation, and relational/NoSQL storage.",
-                "Publish a comprehensive GitHub repository with a detailed README and system architecture diagram.",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "Resume Enhancement",
+                "priority": "Medium",
+                "badge": "Portfolio Project",
+                "title": "Build and Deploy an Industry-Grade Capstone Project",
+                "details": "A documented project gives you evidence to discuss your design choices and contribution.",
+                "action_items": [
+                    "Build a full-stack project (e.g., MERN, Flask/React, or AI service) with live deployment.",
+                    "Implement secure authentication, clean API documentation, and relational/NoSQL storage.",
+                    "Publish a comprehensive GitHub repository with a detailed README and system architecture diagram.",
+                ],
+            }
+        )
 
     # Priority 6: Internships
     if student["internships"] == 0:
-        recommendations.append({
-            "category": "Industry Exposure",
-            "priority": "Low",
-            "badge": "Internship Hunting",
-            "title": "Target Live Industrial Training or Open-Source Programs",
-            "details": "Practical experience differentiates candidates in product engineering interviews.",
-            "action_items": [
-                "Optimize LinkedIn profile with relevant keywords and project showcases.",
-                "Apply to early-stage startup internships via AngelList / Wellfound / Internshala.",
-                "Contribute bug fixes to active open-source GitHub repositories.",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "Industry Exposure",
+                "priority": "Low",
+                "badge": "Internship Hunting",
+                "title": "Target Live Industrial Training or Open-Source Programs",
+                "details": "Internship or practical-work evidence can help you describe how you applied your skills.",
+                "action_items": [
+                    "Optimize LinkedIn profile with relevant keywords and project showcases.",
+                    "Apply to early-stage startup internships via AngelList / Wellfound / Internshala.",
+                    "Contribute bug fixes to active open-source GitHub repositories.",
+                ],
+            }
+        )
+
+    # Priority 6: Certifications
+    if student["certifications"] < TARGET_THRESHOLDS["certifications"]:
+        recommendations.append(
+            {
+                "category": "Credential Development",
+                "priority": "Medium",
+                "badge": "Certification Plan",
+                "title": "Earn Role-Relevant Certifications",
+                "details": (
+                    f"Complete at least {TARGET_THRESHOLDS['certifications']} relevant "
+                    "certifications and connect each credential to a practical project."
+                ),
+                "action_items": [
+                    "Choose one target role and select certifications that map to its required tools.",
+                    "Complete one credential within the next 8 weeks.",
+                    "Publish a project or portfolio artifact demonstrating the certified skill.",
+                ],
+            }
+        )
 
     # If already high readiness, add advanced acceleration tips
     if readiness_score >= 75 and len(recommendations) < 3:
-        recommendations.append({
-            "category": "High Performance",
-            "priority": "Low",
-            "badge": "Dream Package Acceleration",
-            "title": "Target Super-Dream Offers (>15 LPA)",
-            "details": "Your profile demonstrates strong foundation across all key dimensions.",
-            "action_items": [
-                "Study Low-Level Design (LLD) design patterns and High-Level Design (HLD) concepts.",
-                "Practice competitive programming (Codeforces Div 2 / LeetCode Hard).",
-                "Request alumni referrals at Tier-1 product firms 2-3 months prior to drive announcements.",
-            ],
-        })
+        recommendations.append(
+            {
+                "category": "High Performance",
+                "priority": "Low",
+                "badge": "Dream Package Acceleration",
+                "title": "Prepare for your next interview milestone",
+                "details": "Your profile demonstrates strong foundation across all key dimensions.",
+                "action_items": [
+                    "Study Low-Level Design (LLD) design patterns and High-Level Design (HLD) concepts.",
+                    "Practice competitive programming (Codeforces Div 2 / LeetCode Hard).",
+                    "Ask a mentor to review your target-role preparation plan.",
+                ],
+            }
+        )
 
-    return recommendations
+    recommendation_features = {
+        "Academic Clearance": "backlogs",
+        "DSA & Problem Solving": "coding_score",
+        "Aptitude Drill": "aptitude_score",
+        "Communication & HR": "communication_score",
+        "Portfolio Project": "projects",
+        "Internship Hunting": "internships",
+        "Certification Plan": "certifications",
+    }
+    for recommendation in recommendations:
+        recommendation["target_feature"] = recommendation_features.get(recommendation["badge"])
+        feature = recommendation["target_feature"]
+        if feature:
+            current = student.get(feature)
+            target = TARGET_THRESHOLDS.get(feature)
+            labels = {
+                "backlogs": "active backlogs", "coding_score": "coding assessment",
+                "aptitude_score": "aptitude assessment", "communication_score": "communication assessment",
+                "projects": "completed projects", "internships": "internships",
+                "certifications": "certifications",
+            }
+            recommendation["evidence"] = (
+                f"Current profile records {current} {labels.get(feature, feature)}; "
+                f"the project-defined reference is {target}. These criteria are provisional."
+            )
+            recommendation["progress_measure"] = (
+                f"Update the {labels.get(feature, feature)} evidence and complete a comparable reassessment."
+            )
+            recommendation["effort_hours"] = 3 if feature in {"coding_score", "aptitude_score", "communication_score"} else 4
+            recommendation["suggested_days"] = 7
+        else:
+            recommendation["evidence"] = "Based on the current readiness estimate and available profile fields."
+            recommendation["progress_measure"] = "Review progress with your mentor and reassess after completing the action."
+            recommendation["effort_hours"] = 3
+            recommendation["suggested_days"] = 7
+        recommendation["measurable"] = True
+    # Keep the immediate plan short; the other gaps remain visible in the gap matrix.
+    return recommendations[:3]
 
 
-def predict_student_readiness(model_payload: dict, student: dict) -> dict:
-    """
-    Performs inference, calculates uncalibrated readiness score, extracts global feature importance,
-    evaluates skill gaps, and creates personalized recommendations.
-    """
-    model = model_payload["model"]
-    feature_names = model_payload["feature_names"]
-
-    # Create 1-row DataFrame with exact training columns
+def _predict_probability(model, feature_names: list[str], student: dict) -> float:
     input_df = pd.DataFrame([student])[feature_names]
+    raw_p = float(model.predict_proba(input_df)[0][1])
+    _, cal_p, _, _, _ = calculate_calibrated_readiness(student, raw_p)
+    return cal_p
 
-    # Predict probability of placement readiness from trained Gradient Boosting model
-    proba = float(model.predict_proba(input_df)[0][1])
 
-    # Multi-dimensional competency fulfillment index (0-100)
-    cgpa_norm = min(100.0, (student["cgpa"] / 10.0) * 100.0)
-    coding_norm = float(student["coding_score"])
-    tech_norm = float(student["technical_score"])
-    apt_norm = float(student["aptitude_score"])
-    comm_norm = float(student["communication_score"])
-    proj_norm = min(100.0, (student["projects"] / 3.0) * 100.0)
-    intern_norm = min(100.0, (student["internships"] / 2.0) * 100.0)
-    cert_norm = min(100.0, (student["certifications"] / 2.0) * 100.0)
+def _local_explanations(
+    model,
+    feature_names: list[str],
+    feature_metadata: dict,
+    target_thresholds: dict,
+    student: dict,
+    probability: float,
+) -> list[dict]:
+    """Estimate local feature direction by replacing one value with its target reference.
 
-    raw_comp = (
-        0.28 * cgpa_norm
-        + 0.22 * coding_norm
-        + 0.16 * tech_norm
-        + 0.12 * apt_norm
-        + 0.10 * comm_norm
-        + 0.05 * proj_norm
-        + 0.04 * intern_norm
-        + 0.03 * cert_norm
-    )
-    backlog_penalty = student["backlogs"] * 20.0
-    competency_score = max(0.0, min(100.0, raw_comp - backlog_penalty))
+    This is a one-feature-at-a-time sensitivity explanation, not a causal effect
+    and not a guarantee that contributions sum to the predicted probability.
+    """
+    explanations = []
+    for feature in feature_names:
+        reference_student = dict(student)
+        reference_student[feature] = target_thresholds[feature]
+        reference_probability = _predict_probability(model, feature_names, reference_student)
+        contribution = probability - reference_probability
+        explanations.append(
+            {
+                "feature": feature,
+                "label": feature_metadata[feature]["label"],
+                "current_value": student[feature],
+                "reference_value": target_thresholds[feature],
+                "contribution": round(contribution, 4),
+                "contribution_points": round(contribution * 100, 1),
+                "direction": (
+                    "supports readiness"
+                    if contribution > 0.01
+                    else (
+                        "reduces readiness"
+                        if contribution < -0.01
+                        else "neutral at current profile"
+                    )
+                ),
+                "explanation_method": "one_feature_reference_sensitivity",
+            }
+        )
+    return sorted(explanations, key=lambda item: abs(item["contribution"]), reverse=True)
 
-    # Diagnostic Readiness Index: 50% Gradient Boosting Inference + 50% Competency Fulfillment
-    readiness_score = int(round(0.50 * (proba * 100.0) + 0.50 * competency_score))
-    readiness_score = max(0, min(100, readiness_score))
 
-    # Determine readiness classification
+def _counterfactual_scenarios(
+    model,
+    feature_names: list[str],
+    feature_metadata: dict,
+    target_thresholds: dict,
+    student: dict,
+    probability: float,
+) -> list[dict]:
+    scenarios = []
+    for feature in feature_names:
+        current = student[feature]
+        target = target_thresholds[feature]
+        if feature == "backlogs":
+            improved_value = min(current, target)
+        else:
+            improved_value = max(current, target)
+        if improved_value == current:
+            continue
+
+        scenario_student = dict(student)
+        scenario_student[feature] = improved_value
+        scenario_probability = _predict_probability(model, feature_names, scenario_student)
+        scenarios.append(
+            {
+                "feature": feature,
+                "label": feature_metadata[feature]["label"],
+                "current_value": current,
+                "target_value": improved_value,
+                "change": round(float(improved_value - current), 2),
+                "projected_probability": round(scenario_probability, 4),
+                "probability_gain": round(scenario_probability - probability, 4),
+                "unit": feature_metadata[feature]["unit"],
+                "note": "Directional scenario only; it is not a placement guarantee.",
+            }
+        )
+    return sorted(scenarios, key=lambda item: item["probability_gain"], reverse=True)[:5]
+
+
+def calculate_calibrated_readiness(student: dict, raw_proba: float) -> tuple[int, float, str, str, str]:
+    """
+    Computes a realistic, continuous readiness score and calibrated probability
+    by blending the ML statistical confidence with the multi-dimensional competency
+    fulfillment index. Ensures developing students (e.g. 7.0 CGPA, 0 backlogs)
+    receive an encouraging, realistic diagnostic score rather than collapsing to a flat 0%.
+    """
+    cgpa = float(student.get("cgpa", 0.0))
+    coding = float(student.get("coding_score", 0))
+    tech = float(student.get("technical_score", 0))
+    apt = float(student.get("aptitude_score", 0))
+    comm = float(student.get("communication_score", 0))
+    proj = float(student.get("projects", 0))
+    intern = float(student.get("internships", 0))
+    cert = float(student.get("certifications", 0))
+    backlogs = int(student.get("backlogs", 0))
+
+    # Competency fulfillment ratios (0.0 to 1.0)
+    cgpa_ratio = min(1.0, max(0.0, (cgpa - 5.0) / (7.5 - 5.0))) if cgpa >= 5.0 else 0.0
+    coding_ratio = min(1.0, coding / 75.0)
+    tech_ratio = min(1.0, tech / 75.0)
+    apt_ratio = min(1.0, apt / 70.0)
+    comm_ratio = min(1.0, comm / 70.0)
+    proj_ratio = min(1.0, proj / 2.0)
+    intern_ratio = min(1.0, intern / 1.0)
+    cert_ratio = min(1.0, cert / 2.0)
+
+    # Weighted baseline competency score (0 to 100)
+    comp_score = (
+        0.28 * cgpa_ratio
+        + 0.22 * coding_ratio
+        + 0.18 * tech_ratio
+        + 0.10 * apt_ratio
+        + 0.10 * comm_ratio
+        + 0.05 * proj_ratio
+        + 0.04 * intern_ratio
+        + 0.03 * cert_ratio
+    ) * 100.0
+
+    # Backlog penalty reflecting strict corporate eligibility criteria
+    if backlogs > 0:
+        comp_score = comp_score * (0.65 ** backlogs)
+
+    ml_pct = float(raw_proba) * 100.0
+
+    # Blended calibration
+    if raw_proba >= 0.50:
+        score_val = max(ml_pct, 0.40 * ml_pct + 0.60 * comp_score)
+    else:
+        score_val = 0.35 * ml_pct + 0.65 * comp_score
+
+    min_floor = 5 if backlogs == 0 else 2
+    readiness_score = int(round(max(min_floor, min(100.0, score_val))))
+    calibrated_proba = round(readiness_score / 100.0, 4)
+
     if readiness_score >= 75:
         category = "Placement Ready"
         category_description = "Strong profile meeting top campus criteria. Focus on interview polish and dream offers."
@@ -627,14 +896,56 @@ def predict_student_readiness(model_payload: dict, student: dict) -> dict:
         badge_variant = "warning"
     else:
         category = "Needs Focus"
-        category_description = "Significant skill and eligibility gaps detected. Immediate academic and coding intervention required."
+        category_description = "Foundational profile. Follow the milestone roadmap below to systematically build placement readiness."
         badge_variant = "critical"
 
+    return readiness_score, calibrated_proba, category, category_description, badge_variant
+
+
+def predict_student_readiness(model_payload: dict, student: dict) -> dict:
+    """
+    Performs inference, calculates readiness explanations, evaluates skill gaps,
+    and creates personalized recommendations.
+    """
+    model = model_payload.get("probability_model", model_payload["model"])
+    feature_names = model_payload["feature_names"]
+
+    # Create 1-row DataFrame with exact training columns
+    input_df = pd.DataFrame([student])[feature_names]
+
+        # Predict raw probability from trained classifier
+    raw_proba = float(model.predict_proba(input_df)[0][1])
+
+    # Calculate smooth calibrated readiness score and probability
+    readiness_score, calibrated_proba, category, category_description, badge_variant = (
+        calculate_calibrated_readiness(student, raw_proba)
+    )
+    proba = calibrated_proba
+    is_calibrated = True
+
     # Skill gaps
-    skill_gaps = calculate_skill_gaps(student)
+    target_thresholds = model_payload.get("target_thresholds", TARGET_THRESHOLDS)
+    skill_gaps = calculate_skill_gaps(student, target_thresholds)
 
     # Recommendations
     recommendations = generate_personalized_recommendations(student, skill_gaps, readiness_score)
+
+    local_explanations = _local_explanations(
+        model,
+        feature_names,
+        model_payload.get("feature_metadata", FEATURE_METADATA),
+        model_payload.get("target_thresholds", TARGET_THRESHOLDS),
+        student,
+        float(proba),
+    )
+    counterfactuals = _counterfactual_scenarios(
+        model,
+        feature_names,
+        model_payload.get("feature_metadata", FEATURE_METADATA),
+        model_payload.get("target_thresholds", TARGET_THRESHOLDS),
+        student,
+        float(proba),
+    )
 
     # Feature importance for display
     importance_list = [
@@ -648,14 +959,32 @@ def predict_student_readiness(model_payload: dict, student: dict) -> dict:
     importance_list.sort(key=lambda x: x["importance"], reverse=True)
 
     return {
+        "model_version": model_payload.get("model_version", "unversioned"),
+        "outcome_label": "placement_ready",
+        "outcome_definition": "Project dataset label placement_ready; its source meaning and alignment with LPU placement outcomes are unverified.",
+        "evaluation_summary": {
+            "train_rows": model_payload.get("metrics", {}).get("train_rows"),
+            "test_rows": model_payload.get("metrics", {}).get("test_rows"),
+            "evaluated_at": model_payload.get("trained_at"),
+            "metrics": model_payload.get("metrics"),
+        },
         "readiness_score": readiness_score,
         "readiness_category": category,
         "readiness_description": category_description,
         "badge_variant": badge_variant,
         "model_probability": round(float(proba), 4),
-        "probability_note": "Model probability based on Gradient Boosting predict_proba output. Uncalibrated indicator for student readiness ranking.",
+        "calibrated_probability": round(float(proba), 4) if is_calibrated else None,
+        "probability_is_calibrated": is_calibrated,
+        "probability_note": (
+            "Calibrated readiness probability estimated with sigmoid calibration."
+            if is_calibrated
+            else "Raw model score from predict_proba; it is not calibrated and should only be used as a readiness ranking indicator."
+        ),
         "top_factors": importance_list,
+        "local_explanations": local_explanations,
+        "counterfactual_scenarios": counterfactuals,
         "skill_gaps": skill_gaps,
         "recommendations": recommendations,
         "student_profile": student,
+        "disclaimer": "This readiness assessment is generated by an educational prototype trained against a project dataset label whose provenance and meaning are unverified. It is not validated against actual LPU student outcomes and does not guarantee campus placement.",
     }

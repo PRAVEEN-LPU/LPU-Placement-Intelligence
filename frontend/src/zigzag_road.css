@@ -1,0 +1,186 @@
+/* ============================================================
+   ZIGZAG 3D ANIMATED HIGHWAY ROADMAP — Career Highway
+   ============================================================ */
+
+/* ---- Outer wrapper (road SVG + cards side by side) ---- */
+.zigzag-highway-outer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+  min-height: 800px;
+  position: relative;
+}
+
+/* ---- Left side: SVG zigzag road ---- */
+.zigzag-road-visual {
+  flex: 0 0 160px;
+  position: sticky;
+  top: 80px;
+  align-self: flex-start;
+  height: 760px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zigzag-svg {
+  width: 160px;
+  height: 760px;
+  filter: drop-shadow(0 0 18px rgba(245,158,11,0.18));
+}
+
+/* Animated road center dashes */
+@keyframes zzDashScroll {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -120; }
+}
+.zz-dash-anim {
+  animation: zzDashScroll 2.4s linear infinite;
+}
+
+/* ---- Walking Man ---- */
+.zigzag-walking-man {
+  position: absolute;
+  font-size: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(16,185,129,0.6));
+  animation: walkBounce 0.4s steps(2) infinite;
+}
+
+@keyframes walkBounce {
+  0%   { transform: translateX(-50%) scaleX(1)   translateY(0); }
+  50%  { transform: translateX(-50%) scaleX(-1)  translateY(-3px); }
+  100% { transform: translateX(-50%) scaleX(1)   translateY(0); }
+}
+
+/* Stop positions — map stop index → Y position on SVG (approx pixel from top) */
+.walk-to-stop-0 { animation: walkToStop0 3s ease-in-out forwards, walkBounce 0.4s steps(2) infinite; }
+.walk-to-stop-1 { animation: walkToStop1 3s ease-in-out forwards, walkBounce 0.4s steps(2) infinite; }
+.walk-to-stop-2 { animation: walkToStop2 3s ease-in-out forwards, walkBounce 0.4s steps(2) infinite; }
+.walk-to-stop-3 { animation: walkToStop3 3s ease-in-out forwards, walkBounce 0.4s steps(2) infinite; }
+.walk-to-stop-4 { animation: walkToStop4 3s ease-in-out forwards, walkBounce 0.4s steps(2) infinite; }
+.walk-to-stop-5 { animation: walkToStop5 3s ease-in-out forwards, walkBounce 0.4s steps(2) infinite; }
+
+/* Each walk animation moves man from top → target stop Y */
+@keyframes walkToStop0 { from { top: 0px; } to { top: 90px; } }
+@keyframes walkToStop1 { from { top: 90px; } to { top: 185px; } }
+@keyframes walkToStop2 { from { top: 185px; } to { top: 275px; } }
+@keyframes walkToStop3 { from { top: 275px; } to { top: 365px; } }
+@keyframes walkToStop4 { from { top: 365px; } to { top: 455px; } }
+@keyframes walkToStop5 { from { top: 455px; } to { top: 545px; } }
+
+
+/* ---- Right side: stacked milestone cards ---- */
+.zigzag-cards-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 8px;
+}
+
+/* Each stop wrapper — alternates left/right alignment */
+.zigzag-stop-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 8px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.3s;
+  position: relative;
+}
+.zigzag-stop-wrap.zz-done  { border-left-color: #10b981; }
+.zigzag-stop-wrap.zz-pending { border-left-color: #334155; }
+
+/* Alternate card offset for zigzag feel */
+.zigzag-stop-wrap.zz-right { margin-left: 24px; }
+.zigzag-stop-wrap.zz-left  { margin-left: 0px; }
+
+/* Pin button for each stop */
+.zigzag-pin-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  background: rgba(30,41,59,0.9);
+  border: 2px solid #334155;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: #f8fafc;
+  font-weight: 700;
+  font-size: 1rem;
+  position: relative;
+}
+.zz-done .zigzag-pin-btn {
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16,185,129,0.4);
+  background: rgba(16,185,129,0.15);
+}
+.zigzag-pin-btn:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245,158,11,0.3);
+}
+
+.zigzag-pin-label {
+  font-size: 0.6rem;
+  color: #94a3b8;
+  margin-top: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+/* Card within zigzag */
+.zigzag-card {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* Finish wrapper */
+.zigzag-finish {
+  margin-top: 10px;
+  border-left-color: #10b981;
+}
+
+/* ---- 3D perspective on the entire road block ---- */
+.road-master-wrapper {
+  perspective: 900px;
+}
+.zigzag-highway-outer {
+  transform-style: preserve-3d;
+}
+
+/* ============================================================
+   Responsive — on small screens, stack SVG above cards
+   ============================================================ */
+@media (max-width: 700px) {
+  .zigzag-highway-outer {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .zigzag-road-visual {
+    position: relative;
+    top: 0;
+    width: 100%;
+    height: 200px;
+    flex: none;
+  }
+  .zigzag-svg {
+    width: 100%;
+    height: 200px;
+  }
+  .zigzag-cards-col {
+    padding-left: 0;
+  }
+  .zigzag-stop-wrap.zz-right,
+  .zigzag-stop-wrap.zz-left { margin-left: 0; }
+}

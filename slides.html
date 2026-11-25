@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Model Selection & Metrics Defense | Simple English Guide</title>
+  <style>
+    :root {
+      --bg: #0B132B;
+      --card-bg: #1C2541;
+      --card-border: #3A506B;
+      --accent-blue: #00B4D8;
+      --accent-cyan: #48CAE4;
+      --accent-green: #06D6A0;
+      --accent-amber: #FFD166;
+      --accent-rose: #EF476F;
+      --text: #F8F9FA;
+      --text-muted: #A0AEC0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .deck-container {
+      position: relative;
+      width: 95vw;
+      max-width: 1250px;
+      height: 86vh;
+      max-height: 720px;
+      background: #0d1733;
+      border: 1px solid #2a3b63;
+      border-radius: 16px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      flex: 1;
+      padding: 35px 45px;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.25s ease-in-out;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .slide-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: 20px;
+      background: rgba(0, 180, 216, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(0, 180, 216, 0.3);
+      margin-bottom: 8px;
+      align-self: flex-start;
+    }
+
+    .slide-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+
+    .slide-subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      flex: 1;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card.blue { border-left: 4px solid var(--accent-blue); }
+    .card.cyan { border-left: 4px solid var(--accent-cyan); }
+    .card.green { border-left: 4px solid var(--accent-green); }
+    .card.amber { border-left: 4px solid var(--accent-amber); }
+    .card.rose { border-left: 4px solid var(--accent-rose); }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #E2E8F0;
+      flex: 1;
+    }
+
+    .tip-box {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: rgba(0, 180, 216, 0.1);
+      border: 1px dashed rgba(0, 180, 216, 0.3);
+      font-size: 12px;
+      color: var(--accent-cyan);
+    }
+
+    .formula-box {
+      margin: 10px 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #0B132B;
+      border: 1px solid #3A506B;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: bold;
+      color: #38BDF8;
+    }
+
+    .control-bar {
+      height: 55px;
+      background: #080E21;
+      border-top: 1px solid #222F4E;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 25px;
+      user-select: none;
+    }
+
+    .nav-btn {
+      background: #1C2541;
+      border: 1px solid #3A506B;
+      color: #FFFFFF;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--accent-blue);
+      color: #0B132B;
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide active">
+      <span class="slide-badge">MACHINE LEARNING VIVA & DEFENSE</span>
+      <h1 style="font-size: 36px; font-weight: 800; margin: 15px 0 10px 0; color: #FFFFFF;">
+        Model Selection & Evaluation Metrics Master Guide
+      </h1>
+      <p style="font-size: 16px; color: var(--accent-cyan); margin-bottom: 25px;">
+        Why Use Which Model, Factors to Consider, and Step-by-Step Math (Simple English)
+      </p>
+
+      <div class="grid-3">
+        <div class="card cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">1. Model Selection</div>
+          <div class="card-subtitle">Why This Model?</div>
+          <div class="card-desc">Compare Logistic Regression, Decision Tree, Random Forest, and Gradient Boosting. Why Tree Ensembles win on tabular benchmarks.</div>
+        </div>
+        <div class="card amber">
+          <div class="card-title" style="color: var(--accent-amber);">2. Decision Factors</div>
+          <div class="card-subtitle">Selection Criteria</div>
+          <div class="card-desc">Tabular vs unstructured data, linear vs non-linear boundaries, scale invariance, and overfitting risk.</div>
+        </div>
+        <div class="card green">
+          <div class="card-title" style="color: var(--accent-green);">3. Metrics & Live Math</div>
+          <div class="card-subtitle">Step-by-Step Formulas</div>
+          <div class="card-desc">Confusion Matrix (TP, FP, TN, FN), the Accuracy Paradox trap, Precision vs Recall trade-off, and F1-score calculation.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: 4 Factors -->
+    <div class="slide">
+      <span class="slide-badge">DECISION CRITERIA</span>
+      <h2 class="slide-title">4 Factors to Consider Before Choosing an ML Model</h2>
+      <p class="slide-subtitle">Examiner Question: "What factors did you consider before choosing your algorithm?"</p>
+
+      <div class="grid-2">
+        <div class="card cyan">
+          <div class="card-title">1. Target Variable Type</div>
+          <div class="card-subtitle">Classification vs Regression</div>
+          <div class="card-desc">
+            If the target is discrete categories (Placed vs Not Placed), use <b>Classification</b>.<br/>
+            If the target is a continuous number (Salary Package in LPA), use <b>Regression</b>.
+          </div>
+          <div class="tip-box">Say to Examiner: "Our target is binary discrete (0 or 1), so we framed this as Supervised Classification."</div>
+        </div>
+
+        <div class="card blue">
+          <div class="card-title">2. Data Format & Structure</div>
+          <div class="card-subtitle">Tabular vs Unstructured</div>
+          <div class="card-desc">
+            For tabular datasets (CGPA, coding test %, backlogs count), <b>Tree Ensembles (Random Forest / Gradient Boosting)</b> are state-of-the-art.<br/>
+            Neural Networks are meant for raw unstructured data (images/audio).
+          </div>
+          <div class="tip-box">Say to Examiner: "Tree ensembles consistently outperform deep learning on tabular data under 50k rows."</div>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title">3. Linearity vs Non-Linearity</div>
+          <div class="card-subtitle">Compound Decision Boundaries</div>
+          <div class="card-desc">
+            Placement criteria are non-linear: a student with 9.5 CGPA but 2 active backlogs gets disqualified.<br/>
+            Linear models cannot draw curved multi-condition boundaries; Decision Trees capture these compound IF-ELSE rules naturally.
+          </div>
+          <div class="tip-box">Say to Examiner: "Placement criteria are driven by compound logic which requires non-linear models."</div>
+        </div>
+
+        <div class="card green">
+          <div class="card-title">4. Overfitting Risk</div>
+          <div class="card-subtitle">Single Tree vs 200 Trees</div>
+          <div class="card-desc">
+            A single Decision Tree memorizes training noise and fails on unseen students (high variance).<br/>
+            Ensemble models combine <b>200 trees</b> to average out individual mistakes and generalize reliably.
+          </div>
+          <div class="tip-box">Say to Examiner: "We used an ensemble of 200 trees to eliminate single-tree overfitting."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Model Comparison -->
+    <div class="slide">
+      <span class="slide-badge">MODEL COMPARISON</span>
+      <h2 class="slide-title">Why Use Which Model? (Algorithm Showdown)</h2>
+      <p class="slide-subtitle">Comparing the 4 major classification algorithms evaluated on our dataset:</p>
+
+      <div class="grid-2">
+        <div class="card blue">
+          <div class="card-title">Logistic Regression</div>
+          <div class="card-subtitle">Linear Baseline</div>
+          <div class="card-desc">
+            Fast, lightweight, and easy to interpret. However, it underfits non-linear tabular interactions.<br/>
+            <b>Accuracy: 78.43%</b> | Serves as a baseline benchmark.
+          </div>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title">Decision Tree</div>
+          <div class="card-subtitle">Rule-Based Flowchart</div>
+          <div class="card-desc">
+            Transparent IF-ELSE decision logic with zero feature scaling required. Highly prone to memorizing noise (Overfitting).<br/>
+            <b>Accuracy: 84.31%</b> | High variance.
+          </div>
+        </div>
+
+        <div class="card green">
+          <div class="card-title">Random Forest</div>
+          <div class="card-subtitle">Bagging (Parallel Trees)</div>
+          <div class="card-desc">
+            Builds 200 independent trees simultaneously and takes a majority vote. Eliminates single-tree overfitting.<br/>
+            <b>Accuracy: 94.12%</b> | Highly stable and robust to noise.
+          </div>
+        </div>
+
+        <div class="card cyan">
+          <div class="card-title">Gradient Boosting (Our Selected Winner)</div>
+          <div class="card-subtitle">Boosting (Sequential Trees)</div>
+          <div class="card-desc">
+            Builds trees sequentially; each new tree corrects the residual errors of earlier trees. Highest tabular accuracy.<br/>
+            <b>Accuracy: 96.08% | F1-Score: 96.10% | ROC-AUC: 0.985</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Confusion Matrix -->
+    <div class="slide">
+      <span class="slide-badge">EVALUATION FOUNDATION</span>
+      <h2 class="slide-title">The Confusion Matrix: The 4-Quadrant Report Card</h2>
+      <p class="slide-subtitle">Every evaluation metric (Accuracy, Precision, Recall, F1) originates from these 4 outcomes:</p>
+
+      <div class="grid-2">
+        <div class="card green">
+          <div class="card-title" style="color: var(--accent-green);">1. True Positive (TP)</div>
+          <div class="card-subtitle">CORRECT SUCCESS HIT</div>
+          <div class="card-desc">
+            Model predicted: <b>READY (1)</b> | Actual: <b>READY (1)</b><br/>
+            The model correctly identified a student who successfully cracked campus placement drives.
+          </div>
+        </div>
+
+        <div class="card rose">
+          <div class="card-title" style="color: var(--accent-rose);">2. False Positive (FP) - Type I Error</div>
+          <div class="card-subtitle">DANGEROUS FALSE ALARM</div>
+          <div class="card-desc">
+            Model predicted: <b>READY (1)</b> | Actual: <b>NOT READY (0)</b><br/>
+            Dangerous: An unprepared student was falsely flagged as ready, attended interviews without prep, and got rejected.
+          </div>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title" style="color: var(--accent-amber);">3. False Negative (FN) - Type II Error</div>
+          <div class="card-subtitle">MISSED TALENT</div>
+          <div class="card-desc">
+            Model predicted: <b>NOT READY (0)</b> | Actual: <b>READY (1)</b><br/>
+            Missed opportunity: The student was actually placement-ready, but the system incorrectly flagged them as not ready.
+          </div>
+        </div>
+
+        <div class="card blue">
+          <div class="card-title" style="color: var(--accent-blue);">4. True Negative (TN)</div>
+          <div class="card-subtitle">CORRECT WARNING</div>
+          <div class="card-desc">
+            Model predicted: <b>NOT READY (0)</b> | Actual: <b>NOT READY (0)</b><br/>
+            Accurate diagnosis: The model recognized skill deficiencies so the student could receive remedial training early.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Accuracy vs Precision vs Recall -->
+    <div class="slide">
+      <span class="slide-badge">CORE METRICS</span>
+      <h2 class="slide-title">Accuracy vs Precision vs Recall: Clear Formulas & Meaning</h2>
+      <p class="slide-subtitle">Examiner Question: "What is the difference between Precision, Recall, and Accuracy?"</p>
+
+      <div class="grid-3">
+        <div class="card cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">ACCURACY</div>
+          <div class="card-subtitle">Overall Correctness</div>
+          <div class="formula-box">(TP + TN) / Total</div>
+          <div class="card-desc">
+            Percentage of total correct predictions out of all tested students.<br/><br/>
+            <b>The Trap:</b> If 95% of students fail and the model blindly predicts 'Fail' for everyone, Accuracy is 95% but model is useless!
+          </div>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title" style="color: var(--accent-amber);">PRECISION</div>
+          <div class="card-subtitle">Prediction Quality</div>
+          <div class="formula-box">TP / (TP + FP)</div>
+          <div class="card-desc">
+            Out of all students the model marked as 'Ready', how many were truly ready?<br/><br/>
+            <b>Priority:</b> When False Positives are costly (e.g., direct referral to top-tier companies).
+          </div>
+        </div>
+
+        <div class="card green">
+          <div class="card-title" style="color: var(--accent-green);">RECALL (Sensitivity)</div>
+          <div class="card-subtitle">Coverage / Completeness</div>
+          <div class="formula-box">TP / (TP + FN)</div>
+          <div class="card-desc">
+            Out of all truly ready students in college, how many did the model successfully catch?<br/><br/>
+            <b>Priority:</b> When False Negatives are dangerous (e.g., catching struggling students who need training).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: F1-Score -->
+    <div class="slide">
+      <span class="slide-badge">BALANCED PERFORMANCE</span>
+      <h2 class="slide-title">F1-Score: Why Do We Use Harmonic Mean?</h2>
+      <p class="slide-subtitle">Examiner Trick Question: "Why Harmonic Mean instead of Simple Average?"</p>
+
+      <div class="grid-2">
+        <div class="card cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">Arithmetic Mean Conceals Flaws</div>
+          <div class="card-desc" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+            <div>Suppose a model has <b>Precision = 100%</b>, but <b>Recall = 0%</b> (missed every single ready student):</div>
+            <div style="background: #0B132B; padding: 10px; border-radius: 8px;">
+              • Simple Average = (100% + 0%) / 2 = <b>50%</b> !!<br/>
+              (Gives a false impression of moderate quality for a completely broken model).
+            </div>
+            <div><b>Harmonic Mean Exposes Severe Flaws:</b></div>
+            <div style="background: rgba(6, 214, 160, 0.15); padding: 10px; border-radius: 8px;">
+              • F1 = 2 &times; (1.0 &times; 0.0) / (1.0 + 0.0) = <b>0.0%</b> !!<br/>
+              (Heavily penalizes extreme values; F1 is high ONLY when both metrics are high).
+            </div>
+          </div>
+        </div>
+
+        <div class="card green">
+          <div class="card-title" style="color: var(--accent-green);">Our Model's F1 Benchmark</div>
+          <div class="formula-box">F1 = 2 &times; (Precision &times; Recall) / (Precision + Recall)</div>
+          <div class="card-desc" style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              • <b>Gradient Boosting F1-Score: 96.10%</b><br/>
+              • Accuracy  : 96.08%<br/>
+              • Precision : 96.20%<br/>
+              • Recall    : 96.00%<br/>
+              • ROC-AUC   : 0.985
+            </div>
+            <div class="tip-box">
+              Say to Examiner: "Our F1-score of 96.1% confirms that both False Positives and False Negatives are minimized."
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Live Math -->
+    <div class="slide">
+      <span class="slide-badge">PRACTICAL MATH</span>
+      <h2 class="slide-title">Live Viva Calculation: 4 Simple Steps on Paper</h2>
+      <p class="slide-subtitle">Examiner: "Take a pen and paper. If TP=45, FP=5, FN=5, TN=45, calculate all metrics."</p>
+
+      <div class="grid-2">
+        <div class="card amber">
+          <div class="card-title" style="color: var(--accent-amber);">Given Confusion Matrix</div>
+          <div class="card-desc" style="font-family: monospace; font-size: 13px; line-height: 1.8; margin-top: 10px;">
+            • TP (True Positives)  = 45<br/>
+            • FP (False Positives) = 5<br/>
+            • FN (False Negatives) = 5<br/>
+            • TN (True Negatives)  = 45<br/>
+            ----------------------------<br/>
+            <b>Total Students Tested = 100</b>
+          </div>
+        </div>
+
+        <div class="card green">
+          <div class="card-title" style="color: var(--accent-green);">Step-by-Step Live Math</div>
+          <div class="card-desc" style="display: flex; flex-direction: column; gap: 8px; font-family: monospace; font-size: 12.5px;">
+            <div>1. <b>Accuracy</b> = (45 + 45) / 100 = 90 / 100 = <span style="color: var(--accent-cyan); font-weight: bold;">90.0%</span></div>
+            <div>2. <b>Precision</b> = 45 / (45 + 5) = 45 / 50 = <span style="color: var(--accent-amber); font-weight: bold;">90.0%</span></div>
+            <div>3. <b>Recall</b> = 45 / (45 + 5) = 45 / 50 = <span style="color: var(--accent-green); font-weight: bold;">90.0%</span></div>
+            <div>4. <b>F1-Score</b> = 2 &times; (0.90 &times; 0.90) / (0.90 + 0.90) = <span style="color: #38BDF8; font-weight: bold;">90.0%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: 4 Golden Lines -->
+    <div class="slide">
+      <span class="slide-badge">VIVA DEFENSE</span>
+      <h2 class="slide-title">4 Core Questions Asked by Examiners & Exact Answers</h2>
+      <p class="slide-subtitle">Memorize these 4 direct lines to answer questions with total confidence:</p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+        <div class="card cyan" style="padding: 10px 16px;">
+          <div class="card-title" style="font-size: 14px; color: var(--accent-cyan);">Q1: Why did you choose Gradient Boosting?</div>
+          <div class="card-desc" style="font-size: 12.5px;">"Sir, placement rules are non-linear (e.g., high CGPA with active backlogs leads to rejection). Tree ensembles naturally capture compound IF-ELSE criteria without requiring feature scaling, reaching 96.08% accuracy."</div>
+        </div>
+        <div class="card amber" style="padding: 10px 16px;">
+          <div class="card-title" style="font-size: 14px; color: var(--accent-amber);">Q2: If accuracy is 95%, is the model always good?</div>
+          <div class="card-desc" style="font-size: 12.5px;">"No, Sir. On imbalanced data where 95% fail, a naive model predicting Fail for everyone gets 95% accuracy with 0% Recall. That is why we evaluate F1-score and ROC-AUC."</div>
+        </div>
+        <div class="card green" style="padding: 10px 16px;">
+          <div class="card-title" style="font-size: 14px; color: var(--accent-green);">Q3: How did you prevent overfitting?</div>
+          <div class="card-desc" style="font-size: 12.5px;">"Sir, we used an ensemble of 200 trees rather than a single tree, restricted tree depth to 5 (max_depth=5), and used an 80-20 Stratified train-test split."</div>
+        </div>
+        <div class="card rose" style="padding: 10px 16px;">
+          <div class="card-title" style="font-size: 14px; color: var(--accent-rose);">Q4: Which feature influenced predictions the most?</div>
+          <div class="card-desc" style="font-size: 12.5px;">"Sir, Active Backlogs was the strongest negative factor (0 backlogs is mandatory for most campus drives), while Coding Proficiency and Technical Score were the strongest positive drivers."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Control Bar -->
+    <div class="control-bar">
+      <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">&#8592; Previous</button>
+      <div class="slide-counter" id="counterText">Slide 1 of 8</div>
+      <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next &#8594;</button>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counterText = document.getElementById('counterText');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      counterText.textContent = `Slide ${currentSlide + 1} of ${totalSlides}`;
+    }
+
+    function changeSlide(direction) {
+      currentSlide += direction;
+      if (currentSlide < 0) currentSlide = 0;
+      if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+      updateSlide();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        changeSlide(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        changeSlide(-1);
+      }
+    });
+  </script>
+</body>
+</html>

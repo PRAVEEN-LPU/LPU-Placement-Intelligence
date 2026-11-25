@@ -1,11 +1,22 @@
 # LPU Placement Intelligence Platform
-## Complete Dataset Repository & Viva Reference Guide
+## Dataset repository and audit guide
+
+> **Governance notice:** This folder contains prototype, curated, and external
+> benchmark files with different populations and target definitions. The files
+> must not be merged or used for institutional decisions without provenance,
+> license, label, consent, duplicate, missing-value, and leakage review.
+> Run `py -3.13 dataset\data_audit.py` from the repository root before using a
+> dataset for training or validation. The generated evidence is stored under
+> `reports/data-audit/`.
 
 ---
 
 ## Datasets in the `dataset/` Folder
 
-The project currently contains **7 distinct datasets** with a combined total of **4,048 student records**, covering multi-dimensional placement factors: competency skills, real engineering college placements, MBA/recruitment benchmarks, semester-wise programming records, cognitive metrics, and salary package distributions.
+The project currently contains **7 distinct datasets** with a combined total of
+**4,048 rows**. The total is a repository count, not a count of verified
+students: some files contain duplicates, one contains missing salary values,
+and provenance and label construction still require owner confirmation.
 
 | # | Dataset File | Rows | Features | Focus / Schema |
 |---|---|---|---|---|
@@ -25,8 +36,8 @@ The project currently contains **7 distinct datasets** with a combined total of 
 * **Records**: 253 students
 * **Target**: `placement_ready` (1 = Ready, 0 = Not Ready)
 * **Key Features**: `cgpa`, `technical_score`, `aptitude_score`, `communication_score`, `coding_score`, `projects`, `internships`, `certifications`, `backlogs`
-* **Purpose**: Primary training dataset matching our institutional 9-feature ML schema.
-* **Viva Explanation**: *"Humne institutional campus placement criteria ke base par ye dataset curate kiya hai jisme academic, coding aur practical experience ke modern features hain."*
+* **Purpose**: Prototype training candidate matching the 9-feature ML schema.
+* **Governance status**: Provenance and `placement_ready` label construction are unverified; do not describe the label as an observed placement outcome until confirmed.
 
 ---
 
@@ -35,8 +46,8 @@ The project currently contains **7 distinct datasets** with a combined total of 
 * **Source**: Kaggle College Placement Dataset (Urvashi Ramdasani / Nirantk)
 * **Target**: `PlacedOrNot` (1 = Placed, 0 = Not Placed)
 * **Columns**: `Age`, `Gender`, `Stream` (CS, IT, ECE, Mech, Civil, Electrical), `Internships`, `CGPA`, `Hostel`, `HistoryOfBacklogs`, `PlacedOrNot`
-* **Purpose**: Large-scale institutional engineering benchmark proving the correlation of backlogs, internships, and branch streams on actual placements.
-* **Viva Explanation**: *"Ye 2,966 engineering students ka comprehensive real dataset hai. Isme actual branch streams (CS, IT, Mech), internships count aur backlogs ka placement par impact validate kiya gaya hai."*
+* **Purpose**: External engineering-placement benchmark candidate.
+* **Governance status**: Contains 1,829 exact duplicate rows in the current repository snapshot; source, license, and duplicate policy require verification before use.
 
 ---
 
@@ -45,8 +56,8 @@ The project currently contains **7 distinct datasets** with a combined total of 
 * **Source**: Kaggle Campus Recruitment (Benison Sunil)
 * **Target**: `status` (Placed / Not Placed) + `salary`
 * **Columns**: `ssc_p`, `ssc_b`, `hsc_p`, `hsc_b`, `hsc_s`, `degree_p`, `degree_t`, `workex`, `etest_p`, `specialisation`, `mba_p`, `status`, `salary`
-* **Purpose**: Academic progression benchmark across 10th, 12th, graduation, and post-graduation with company salary packages.
-* **Viva Explanation**: *"Ye Kaggle ka standard benchmark dataset hai jisme academic milestones (10th, 12th, degree) aur past work experience ke effect ko measure kiya gaya hai."*
+* **Purpose**: External academic-progression benchmark candidate.
+* **Governance status**: Contains 67 missing `salary` values. Salary must not be used as a placement feature without a documented missing-value and leakage policy.
 
 ---
 

@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎓 LPU Placement Intelligence
 ### Student Readiness Prediction & Skill Gap Analysis Platform
@@ -11,7 +11,7 @@
 
 <br/>
 
-> **Built with ❤️ by [PRAVEEN](https://github.com/PRAVEEN-LPU)**
+
 
 <br/>
 
@@ -21,8 +21,52 @@ An end-to-end **Machine Learning web application** designed to evaluate a studen
 
 ---
 
+## 🚧 Production-readiness status
+
+**Final review decision: NO-GO for institutional production.** The repository
+is suitable for continued development and a controlled technical pilot only
+after the pilot checklist is approved. See the [final release readiness
+review](docs/FINAL_RELEASE_READINESS.md) for completed evidence and blocking
+gaps.
+
+The frontend phases 13–18 have a separate evidence record: build, test,
+accessibility, performance, deployment, and telemetry gates pass. Local
+credential authentication with server-enforced roles and cohort scoping is
+implemented; institutional SSO, the usability pilot, and the staging deploy
+remain blockers. See the [frontend sign-off](docs/FRONTEND_SIGN_OFF.md) and
+[AUTHENTICATION.md](docs/AUTHENTICATION.md).
+
+This repository currently contains a working educational prototype. The live API uses the nine-feature schema in `dataset/students.csv`, which contains 253 records. Data provenance and the construction of the `placement_ready` label must be verified before the model is used for institutional decisions.
+
+The current prototype provides threshold-based skill gaps, student-specific model explanations, persistent assessment history, role-based workspaces, cohort-scoped mentor access, shared action plans and follow-ups, a manually maintained placement pipeline, and a basic access audit. Target-role thresholds are provisional project choices. It does not connect to institutional SSO/MFA, a consent-management service, external verified student records, or a retention/deletion workflow. See [connected workspace behavior](docs/MENTOR_ANALYTICS.md), the [governance baseline](docs/GOVERNANCE_BASELINE.md), [AUTHENTICATION.md](docs/AUTHENTICATION.md), and [production release criteria](docs/RELEASE_CRITERIA.md) before extending or deploying the system.
+
 ## 📸 Application Screenshots
 
+### 🌟 Interactive Career Highway Zigzag Roadmap & Avatar Simulation
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="screenshots/fig4_clean_zigzag_highway.png" alt="Clean Zigzag Highway Roadmap" width="100%"/>
+<br/><b>🛣️ Career Highway Zigzag Roadmap — Sequential Milestone Checkpoints</b>
+</td>
+<td align="center" width="50%">
+<img src="screenshots/fig4b_walking_student_in_action.png" alt="Walking Student in Action" width="100%"/>
+<br/><b>🚶 Animated Student Avatar — Forward Stride to Cleared Milestone</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="screenshots/fig4c_walking_student_slow_return.png" alt="Slow Return Walk" width="100%"/>
+<br/><b>↩️ Guarded Movement — Decelerated Return Walk (4.8s) on Unmarking</b>
+</td>
+<td align="center" width="50%">
+<img src="screenshots/fig0_tri_role_login.png" alt="Tri-Role Authentication Screen" width="100%"/>
+<br/><b>🔐 Tri-Role Role-Based Authentication Gateway (Student / Mentor / Admin)</b>
+</td>
+</tr>
+</table>
+
+### 📊 Diagnostic Dashboard, Remediation & Analytics Suite
 <table>
 <tr>
 <td align="center" width="50%">
@@ -45,9 +89,19 @@ An end-to-end **Machine Learning web application** designed to evaluate a studen
 </td>
 </tr>
 <tr>
+<td align="center" width="50%">
+<img src="screenshots/fig5_mentor_cohort_roster.png" alt="Mentor Cohort Roster" width="100%"/>
+<br/><b>👥 Faculty Mentor Workspace — Assigned Cohort Support Roster</b>
+</td>
+<td align="center" width="50%">
+<img src="screenshots/fig7_admin_placement_pipeline.png" alt="Admin Placement Pipeline" width="100%"/>
+<br/><b>📈 Institutional Placement Recruitment Pipeline & Funnel</b>
+</td>
+</tr>
+<tr>
 <td align="center" colspan="2">
-<img src="screenshots/fig5_needs_focus_profile.png" alt="Needs Focus Profile" width="50%"/>
-<br/><b>🔴 Needs Focus — Profile Analysis View</b>
+<img src="screenshots/fig5_needs_focus_profile.png" alt="Needs Focus Profile" width="55%"/>
+<br/><b>🔴 Needs Focus — Diagnostic Profile Analysis View</b>
 </td>
 </tr>
 </table>
@@ -59,9 +113,12 @@ An end-to-end **Machine Learning web application** designed to evaluate a studen
 | Feature | Description |
 |---|---|
 | 🎛️ **Competency Matrix Dashboard** | Interactive sliders for 9 student parameters with live sync |
-| 🤖 **ML Inference Engine** | Gradient Boosting Classifier with **96.08% accuracy**, **96% F1-score**, and **0.9754 ROC-AUC** (Top performer across 8 models) |
+| 🤖 **ML Inference Engine** | Gradient Boosting prototype trained on `students.csv`; metrics are preliminary and must be reproduced with the canonical evaluation pipeline before production use |
 | 🔍 **Skill Gap Matrix** | Compares student params against placement cutoffs |
 | 🗺️ **Action Roadmap** | Prioritized 30–60 day improvement plans |
+| 🧭 **Target-role fit** | Compare one or more selected roles against clearly marked starter thresholds |
+| 🧑‍🏫 **Mentor workspace** | Cohort-scoped mentee list, support queue, goals, private notes, and follow-up history |
+| 🏢 **Placement workspace** | Cohort readiness, aggregate coverage, model metadata, and manually recorded placement stages |
 | 📄 **Report Export** | Print-optimized diagnostic scorecard |
 | ⚡ **Quick Presets** | One-click: Top Performer / Average / Needs Focus / Backlogs |
 
@@ -82,8 +139,10 @@ An end-to-end **Machine Learning web application** designed to evaluate a studen
 | 7 | `placement_iq_academic.csv` | 100 | 📦 **CampusX** — Classification Benchmark | CGPA + IQ Score → Placement Classification |
 
 ### 🎯 Primary Training Dataset
-The **live ML API uses `students.csv`** — curated with 9 granular, actionable parameters that students can actually improve:
+The **live ML API uses `students.csv`** — a prototype dataset with 9 granular, actionable parameters that students can actually improve:
 `CGPA` · `Coding Score` · `Technical Score` · `Aptitude` · `Communication` · `Projects` · `Internships` · `Certifications` · `Backlogs`
+
+The six additional datasets in this repository are not automatically combined with the live model. They are supporting benchmark and analysis sources until a documented integration and external-validation pipeline is implemented.
 
 ---
 
@@ -215,15 +274,35 @@ python -m venv .venv
 # Activate — macOS / Linux:
 source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install runtime and development dependencies from the repository root
+cd ..
+python -m pip install -r requirements-dev.txt
+
+# Copy local configuration template
+Copy-Item .env.example .env
 
 # Start Flask API server
+cd backend
 python app.py
 ```
 
 ✅ API live at: `http://127.0.0.1:5000`  
 ✅ Health check: `http://127.0.0.1:5000/api/health`
+
+Create an account before signing in (the username must be lowercase):
+
+```bash
+py backend/manage_users.py create-user \
+  --username student.demo --display-name "Demo Student" \
+  --role student --cohort CSE-2027
+```
+
+Create mentor accounts with `--role mentor --cohort <name>`. Placement
+officers and administrators use `--role placement_officer` or `--role admin`.
+See [AUTHENTICATION.md](docs/AUTHENTICATION.md) for the full role model.
+For an isolated synthetic demo with accounts across two cohorts, see the
+[local demo guide](docs/DEMO_GUIDE.md). Its reset only removes files under the
+dedicated demo database directory.
 
 ---
 
@@ -235,14 +314,17 @@ python app.py
 # Navigate to frontend (from project root)
 cd frontend
 
-# Install Node.js dependencies
-npm install
+# Install locked Node.js dependencies
+npm ci
 
 # Start dev server
 npm run dev
 ```
 
 ✅ App live at: `http://localhost:5173`
+
+For the complete local, Docker, configuration, and quality-check workflow, see
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ---
 
@@ -282,17 +364,35 @@ python compare_models.py
 
 ## 📡 API Endpoints Reference
 
+All endpoints except the health/readiness probes and sign-in require an
+authenticated session. State-changing requests must send `X-CSRF-Token` from
+the `lpu_csrf` cookie. See [AUTHENTICATION.md](docs/AUTHENTICATION.md).
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | Server health check |
-| `POST` | `/api/predict` | Get ML placement prediction |
-| `POST` | `/api/skill-gap` | Get skill gap analysis |
-| `POST` | `/api/roadmap` | Get personalized action roadmap |
+| `GET` | `/api/health` | Public server health check |
+| `POST` | `/api/auth/login` | Sign in and start a session |
+| `GET` | `/api/auth/me` | Current user, role, cohort, session expiry |
+| `POST` | `/api/auth/logout` | Revoke the session |
+| `POST` | `/api/predict` | Get ML placement prediction (authenticated) |
+| `POST` | `/api/history` | Save an owned assessment |
+| `POST` | `/api/history/query` | Read the caller's assessment history |
+| `GET` | `/api/cohort-analytics` | Staff-only, cohort-scoped aggregate analytics |
+
 
 ### Example API Request
+
+Sign in first. The login response sets the session and CSRF cookies; copy the
+`csrf_token` value into the POST header.
+
 ```bash
-curl -X POST http://127.0.0.1:5000/api/predict \
+curl -c cookies.txt -X POST http://127.0.0.1:5000/api/auth/login \
   -H "Content-Type: application/json" \
+  -d '{"username": "student.demo", "password": "<password>"}'
+
+curl -b cookies.txt -X POST http://127.0.0.1:5000/api/predict \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: <csrf_token from login>" \
   -d '{
     "cgpa": 8.5,
     "coding_score": 80,
@@ -321,19 +421,25 @@ curl -X POST http://127.0.0.1:5000/api/predict \
 
 ---
 
+## ⚠️ Educational Disclaimer
+
+This platform currently provides diagnostic readiness indicators from a prototype dataset. Predictions are not calibrated placement probabilities, do not prove causation, and do not constitute a legal, formal, or institutional guarantee of campus recruitment outcomes. Company and placement-drive requirements can change; the published drive notice remains authoritative.
+
+---
+
 ## 📜 License
 
 This project is licensed under the **MIT License**.
 
 > ⚠️ **Important:** Any use, fork, or distribution of this project **must retain the original author credit**:
 >
-> **Created by [PRAVEEN](https://github.com/PRAVEEN-LPU)**
+> 
 
 ---
 
 <div align="center">
 
-### Made with 🔥 by [PRAVEEN](https://github.com/PRAVEEN-LPU)
+
 
 [![GitHub](https://img.shields.io/badge/GitHub-PRAVEEN--LPU-181717?style=for-the-badge&logo=github)](https://github.com/PRAVEEN-LPU)
 

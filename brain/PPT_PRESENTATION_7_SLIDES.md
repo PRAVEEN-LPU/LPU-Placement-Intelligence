@@ -1,6 +1,11 @@
 # LPU Placement Intelligence Platform
 ## 7-Slide Professional Presentation (PPT & Viva Guide)
 
+> **Metric notice:** The benchmark figures in this historical presentation
+> predate the canonical repeated cross-validation pipeline. Do not present them
+> as current production evidence; use
+> `reports/model-evaluation/canonical_evaluation.md` instead.
+
 ---
 
 ### Presentation Overview

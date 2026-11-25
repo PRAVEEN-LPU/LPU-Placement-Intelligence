@@ -1,0 +1,459 @@
+/* ============================================================
+   CAREER HIGHWAY — CLEAN ZIGZAG ROADMAP & ANIMATED WALKING MAN
+   ============================================================ */
+
+.highway-clean-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  position: relative;
+  margin-top: 16px;
+  margin-bottom: 32px;
+}
+
+/* Winding Highway Timeline Spine */
+.highway-zigzag-track {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 0 30px;
+}
+
+/* Background Animated Road Ribbon */
+.highway-svg-spine {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Animated road dashes */
+@keyframes dashTravel {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -80; }
+}
+.road-dash-stream {
+  animation: dashTravel 2s linear infinite;
+}
+
+/* Walking Character on Highway */
+.highway-walking-actor {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: top 2.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), left 2.5s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+.walking-avatar-wrapper {
+  position: relative;
+  width: 56px;
+  height: 64px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+}
+
+/* Walking animation when in motion */
+.highway-walking-actor.is-moving .walking-avatar-wrapper {
+  animation: bodyBob 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes bodyBob {
+  from { transform: translateY(0px) rotate(-2deg); }
+  to   { transform: translateY(-6px) rotate(2deg); }
+}
+
+/* Walking Status Pill */
+.walking-status-bubble {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: pulseGlow 1.2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from { box-shadow: 0 0 6px rgba(56, 189, 248, 0.3); }
+  to   { box-shadow: 0 0 16px rgba(56, 189, 248, 0.7); }
+}
+
+/* Each Stoppage Row (Alternating Left & Right) */
+.highway-checkpoint-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 5;
+  min-height: 190px;
+}
+
+.highway-checkpoint-row.row-left {
+  flex-direction: row;
+}
+
+.highway-checkpoint-row.row-right {
+  flex-direction: row-reverse;
+}
+
+/* Milestone Card Half */
+.checkpoint-card-col {
+  flex: 1;
+  max-width: 48%;
+}
+
+/* Road Center Node */
+.checkpoint-node-col {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Empty Balancer Column for opposite side */
+.checkpoint-spacer-col {
+  flex: 1;
+  max-width: 48%;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.spacer-milestone-preview {
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Circular Checkpoint Pin Button */
+.checkpoint-pin-button {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 3px solid #f59e0b;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  position: relative;
+}
+
+.checkpoint-pin-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.6);
+}
+
+.checkpoint-pin-button.cleared {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.checkpoint-pin-code {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+  color: #f59e0b;
+}
+
+.checkpoint-pin-button.cleared + .checkpoint-pin-code {
+  color: #34d399;
+}
+
+/* Connector Line from Pin to Card */
+.checkpoint-connector-line {
+  position: absolute;
+  top: 50%;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, rgba(245, 158, 11, 0.2));
+  width: 50px;
+  z-index: -1;
+}
+
+.row-left .checkpoint-connector-line {
+  right: 50%;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.row-right .checkpoint-connector-line {
+  left: 50%;
+  transform: translateY(-50%);
+}
+
+/* Enhanced Milestone Card */
+.highway-clean-card {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 4px solid var(--card-border-color, #f59e0b);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+.highway-clean-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+}
+
+.highway-clean-card.is-cleared {
+  border-left-color: #10b981;
+  background: rgba(15, 23, 42, 0.94);
+}
+
+/* Card Header */
+.clean-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.clean-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clean-badge-category {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--card-border-color, #f59e0b);
+}
+
+.clean-badge-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.highway-clean-card.is-cleared .clean-badge-status {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+/* Tick Button */
+.btn-clean-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  transition: all 0.2s;
+}
+
+.btn-clean-tick:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #34d399;
+}
+
+.btn-clean-tick.is-ticked {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+  color: #34d399;
+}
+
+/* Card Title */
+.clean-card-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+/* Target Box */
+.clean-target-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: #fef3c7;
+}
+
+.clean-target-box strong {
+  color: #f59e0b;
+}
+
+.highway-clean-card.is-cleared .clean-target-box {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #ecfdf5;
+}
+
+.highway-clean-card.is-cleared .clean-target-box strong {
+  color: #34d399;
+}
+
+.clean-card-why {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+/* Action Plan Guidance */
+.clean-action-box {
+  background: rgba(15, 23, 42, 0.65);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.clean-action-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fb923c;
+  margin-bottom: 6px;
+}
+
+.clean-action-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+/* Card Footer */
+.clean-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 8px;
+  font-size: 11px;
+}
+
+.clean-resource-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.clean-resource-link:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+/* Finish Banner at Bottom */
+.highway-finish-stage {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.9));
+  border: 2px solid #10b981;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-top: 16px;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+}
+
+.finish-trophy-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.2);
+  border: 3px solid #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.finish-content h4 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #34d399;
+}
+
+.finish-content p {
+  margin: 0;
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+/* Responsive Stack for Mobile */
+@media (max-width: 860px) {
+  .highway-checkpoint-row {
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .checkpoint-card-col {
+    max-width: 100%;
+  }
+  .checkpoint-spacer-col {
+    display: none;
+  }
+  .checkpoint-node-col {
+    width: 100%;
+    flex-direction: row;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+  .highway-svg-spine {
+    display: none;
+  }
+  .checkpoint-connector-line {
+    display: none;
+  }
+}

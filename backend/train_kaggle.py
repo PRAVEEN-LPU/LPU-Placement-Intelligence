@@ -13,10 +13,10 @@ This script provides:
 """
 
 import os
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
@@ -27,9 +27,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 
-CSV_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "dataset", "campus_recruitment_kaggle.csv"
-)
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "dataset", "campus_recruitment_kaggle.csv")
 
 
 def load_and_preprocess(filepath: str) -> pd.DataFrame:
@@ -64,8 +62,12 @@ def run_eda(df: pd.DataFrame):
     p_no = no_workex["target"].mean() * 100 if len(no_workex) > 0 else 0
 
     print("\n--- Work Experience Impact ---")
-    print(f"Students with prior work experience    : {len(with_workex)} (Placement Rate: {p_with:.1f}%)")
-    print(f"Students without prior work experience : {len(no_workex)} (Placement Rate: {p_no:.1f}%)")
+    print(
+        f"Students with prior work experience    : {len(with_workex)} (Placement Rate: {p_with:.1f}%)"
+    )
+    print(
+        f"Students without prior work experience : {len(no_workex)} (Placement Rate: {p_no:.1f}%)"
+    )
 
     print("\n--- Average Academic Percentages by Placement Status ---")
     grouped = df.groupby("status")[["ssc_p", "hsc_p", "degree_p", "etest_p", "mba_p"]].mean()

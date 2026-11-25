@@ -1,5 +1,11 @@
 # LPU Placement Intelligence Platform
 ## Machine Learning Model Evaluation & Benchmark Report
+
+> **Superseded:** This historical report describes the former single-split
+> benchmark and must not be used as the current model evaluation. See
+> `reports/model-evaluation/canonical_evaluation.md` for the reproducible
+> repeated cross-validation report. The current dataset remains prototype data
+> with unverified provenance and label construction.
 **Author & Developer**: PRAVEEN ([PRAVEEN-LPU](https://github.com/PRAVEEN-LPU/LPU-Placement-Intelligence))  
 **Project**: LPU Placement Intelligence & Student Readiness Prediction Platform  
 
