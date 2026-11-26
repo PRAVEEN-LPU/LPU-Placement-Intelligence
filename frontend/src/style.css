@@ -55,6 +55,200 @@
 .next-action, .assignment-directory-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: .9rem 1rem; border: 1px solid rgba(148,163,184,.2); border-radius: .75rem; background: rgba(15,23,42,.45); }
 .next-action p, .assignment-directory-row p { margin: .3rem 0 0; color: #aab8ca; font-size: .85rem; }
 .assignment-directory-row p { flex-basis: 100%; }
+
+/* Colorful Modern Square Cards for "What should I do next?" */
+.next-action-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  gap: 1.25rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+@media (min-width: 900px) {
+  .next-action-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+.next-action-square-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: stretch !important;
+  min-height: 250px !important;
+  aspect-ratio: 1 / 0.88 !important;
+  padding: 1.35rem 1.25rem !important;
+  border-radius: 1.1rem !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.next-action-square-card:hover {
+  transform: translateY(-5px) !important;
+}
+
+/* Card 1: Vibrant Cyan / Tech Sprint */
+.action-card-cyan {
+  background: linear-gradient(145deg, rgba(6, 182, 212, 0.16) 0%, rgba(14, 165, 233, 0.08) 50%, rgba(15, 23, 42, 0.9) 100%) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.38) !important;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+.action-card-cyan:hover {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Card 2: Vibrant Purple / Analytical & Aptitude */
+.action-card-purple {
+  background: linear-gradient(145deg, rgba(168, 85, 247, 0.16) 0%, rgba(217, 70, 239, 0.08) 50%, rgba(15, 23, 42, 0.9) 100%) !important;
+  border: 1.5px solid rgba(192, 132, 252, 0.38) !important;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+.action-card-purple:hover {
+  border-color: #c084fc !important;
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Card 3: Vibrant Orange / Practical & Industry */
+.action-card-orange {
+  background: linear-gradient(145deg, rgba(249, 115, 22, 0.16) 0%, rgba(234, 179, 8, 0.08) 50%, rgba(15, 23, 42, 0.9) 100%) !important;
+  border: 1.5px solid rgba(251, 146, 60, 0.38) !important;
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+.action-card-orange:hover {
+  border-color: #fb923c !important;
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.next-action-card-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 0.85rem !important;
+  width: 100% !important;
+}
+
+.next-action-badge-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+}
+
+.next-action-icon-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 9px !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.next-action-category-tag {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: #e2e8f0 !important;
+}
+
+.next-action-step-num {
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  color: #94a3b8 !important;
+  padding: 0.2rem 0.55rem !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(148, 163, 184, 0.15) !important;
+}
+
+.next-action-card-mid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45rem !important;
+  flex: 1 !important;
+  justify-content: center !important;
+  margin: 0.4rem 0 1.1rem !important;
+  width: 100% !important;
+}
+
+.next-action-card-title {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+}
+
+.next-action-card-desc {
+  font-size: 0.82rem !important;
+  line-height: 1.4 !important;
+  color: #94a3b8 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+}
+
+.next-action-card-bottom {
+  margin-top: auto !important;
+  width: 100% !important;
+}
+
+.next-action-open-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  padding: 0.65rem 1rem !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.65rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+
+.btn-action-cyan {
+  background: rgba(6, 182, 212, 0.18) !important;
+  border: 1px solid rgba(56, 189, 248, 0.5) !important;
+  color: #38bdf8 !important;
+}
+.btn-action-cyan:hover {
+  background: #0284c7 !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4) !important;
+}
+
+.btn-action-purple {
+  background: rgba(168, 85, 247, 0.18) !important;
+  border: 1px solid rgba(192, 132, 252, 0.5) !important;
+  color: #c084fc !important;
+}
+.btn-action-purple:hover {
+  background: #9333ea !important;
+  border-color: #c084fc !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.4) !important;
+}
+
+.btn-action-orange {
+  background: rgba(249, 115, 22, 0.18) !important;
+  border: 1px solid rgba(251, 146, 60, 0.5) !important;
+  color: #fb923c !important;
+}
+.btn-action-orange:hover {
+  background: #ea580c !important;
+  border-color: #fb923c !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.4) !important;
+}
 .activity-timeline { display: grid; gap: .65rem; padding: 0; list-style: none; }
 .activity-timeline li { display: flex; flex-wrap: wrap; gap: .75rem; align-items: baseline; }
 .activity-timeline time { color: #aab8ca; font-size: .8rem; min-width: 6rem; }
