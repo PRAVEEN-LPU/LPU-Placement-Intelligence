@@ -1,6 +1,7 @@
 """Application configuration loaded from environment variables."""
 
 import os
+import re
 from dataclasses import dataclass
 
 
@@ -10,9 +11,21 @@ def _as_bool(value: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _as_origins(value: str) -> tuple[str, ...]:
-    origins = tuple(origin.strip() for origin in value.split(",") if origin.strip())
-    return origins or ("http://127.0.0.1:5173", "http://localhost:5173")
+def _as_origins(value: str) -> tuple:
+    parsed = []
+    for origin in value.split(","):
+        origin = origin.strip()
+        if not origin:
+            continue
+        if origin.startswith("^") or ".*" in origin:
+            parsed.append(re.compile(origin))
+        else:
+            parsed.append(origin)
+    # Always allow vercel.app domains and localhost for robust deployments
+    vercel_pattern = re.compile(r"^https://.*\.vercel\.app$")
+    if vercel_pattern not in parsed:
+        parsed.append(vercel_pattern)
+    return tuple(parsed) or ("http://127.0.0.1:5173", "http://localhost:5173")
 
 
 @dataclass(frozen=True)
