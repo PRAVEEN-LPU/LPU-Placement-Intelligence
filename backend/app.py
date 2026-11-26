@@ -129,13 +129,15 @@ _bootstrap_default_accounts()
 
 
 def _set_auth_cookies(response, token: str, csrf_token: str, max_age: int):
+    # Cross-site deployments (Vercel -> Render) require SameSite=None and Secure=True
+    samesite = "None" if AUTH_COOKIE_SECURE else "Lax"
     response.set_cookie(
         SESSION_COOKIE,
         token,
         max_age=max_age,
         httponly=True,
         secure=AUTH_COOKIE_SECURE,
-        samesite="Lax",
+        samesite=samesite,
         path="/",
     )
     # Readable by the SPA so it can echo the token in X-CSRF-Token.
@@ -145,17 +147,18 @@ def _set_auth_cookies(response, token: str, csrf_token: str, max_age: int):
         max_age=max_age,
         httponly=False,
         secure=AUTH_COOKIE_SECURE,
-        samesite="Lax",
+        samesite=samesite,
         path="/",
     )
     return response
 
 
 def _clear_auth_cookies(response):
+    samesite = "None" if AUTH_COOKIE_SECURE else "Lax"
     response.delete_cookie(
-        SESSION_COOKIE, path="/", secure=AUTH_COOKIE_SECURE, samesite="Lax", httponly=True
+        SESSION_COOKIE, path="/", secure=AUTH_COOKIE_SECURE, samesite=samesite, httponly=True
     )
-    response.delete_cookie(CSRF_COOKIE, path="/", secure=AUTH_COOKIE_SECURE, samesite="Lax")
+    response.delete_cookie(CSRF_COOKIE, path="/", secure=AUTH_COOKIE_SECURE, samesite=samesite)
     return response
 
 
@@ -216,6 +219,12 @@ def require_auth(*roles: str, csrf: bool = True):
                 return view(*args, **kwargs)
 
             token = request.cookies.get(SESSION_COOKIE)
+            if not token:
+                auth_header = request.headers.get("Authorization", "")
+                if auth_header.startswith("Bearer "):
+                    token = auth_header[7:].strip()
+                elif request.headers.get("X-Session-Token"):
+                    token = request.headers.get("X-Session-Token").strip()
             record = auth.get_session(AUTH_DATABASE_PATH, token)
             if record is None:
                 message = (
@@ -244,8 +253,23 @@ def require_auth(*roles: str, csrf: bool = True):
                 )
 
             if csrf and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+                has_header_auth = bool(
+                    request.headers.get("Authorization", "").startswith("Bearer ")
+                    or request.headers.get("X-Session-Token")
+                )
                 supplied = request.headers.get("X-CSRF-Token", "")
-                if not secrets.compare_digest(supplied, record["csrf_token"]):
+                if not has_header_auth:
+                    if not secrets.compare_digest(supplied, record["csrf_token"]):
+                        return (
+                            jsonify(
+                                {
+                                    "status": "error",
+                                    "message": "Your session verification token is invalid. Refresh and retry.",
+                                }
+                            ),
+                            403,
+                        )
+                elif supplied and not secrets.compare_digest(supplied, record["csrf_token"]):
                     return (
                         jsonify(
                             {
@@ -268,6 +292,7 @@ def _login_response(user: dict, session: dict, status: int = 200):
             "status": "success",
             "data": {
                 "user": user,
+                "token": session["token"],
                 "csrf_token": session["csrf_token"],
                 "expires_at": session["expires_at"],
                 "expires_in": session["expires_in"],
@@ -391,6 +416,7 @@ def current_user():
             "status": "success",
             "data": {
                 "user": g.current_user,
+                "token": g.session_token,
                 "csrf_token": g.csrf_token,
                 "expires_at": g.session_expires_at,
                 "expires_in": max_age,

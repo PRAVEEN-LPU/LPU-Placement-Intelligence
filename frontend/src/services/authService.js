@@ -1,4 +1,4 @@
-import { get, post } from './apiClient';
+import { get, post, setStoredSession, clearStoredSession } from './apiClient';
 import { getSupabaseClient, usesSupabaseAuth } from './supabaseClient';
 
 export async function fetchSession() {
@@ -8,7 +8,11 @@ export async function fetchSession() {
     if (!data.session) return null;
   }
   const response = await get('/auth/me', { timeoutMs: 8000 });
-  return response?.data ?? null;
+  const data = response?.data ?? null;
+  if (data?.token) {
+    setStoredSession(data.token, data.csrf_token);
+  }
+  return data;
 }
 
 export async function signIn(username, password) {
@@ -19,10 +23,15 @@ export async function signIn(username, password) {
     catch (err) { await getSupabaseClient().auth.signOut(); throw err; }
   }
   const response = await post('/auth/login', { username, password }, { timeoutMs: 15000 });
-  return response?.data ?? null;
+  const data = response?.data ?? null;
+  if (data?.token) {
+    setStoredSession(data.token, data.csrf_token);
+  }
+  return data;
 }
 
 export async function signOut() {
+  clearStoredSession();
   if (usesSupabaseAuth) {
     const { error } = await getSupabaseClient().auth.signOut();
     if (error) throw error;

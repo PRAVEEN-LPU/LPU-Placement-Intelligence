@@ -14,7 +14,50 @@ export function onUnauthorized(handler) {
   return () => unauthorizedListeners.delete(handler);
 }
 
+const TOKEN_KEY = 'lpu_session_token';
+const CSRF_KEY = 'lpu_csrf_token';
+
+export function setStoredSession(token, csrfToken) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      if (token) window.localStorage.setItem(TOKEN_KEY, token);
+      else window.localStorage.removeItem(TOKEN_KEY);
+      if (csrfToken) window.localStorage.setItem(CSRF_KEY, csrfToken);
+      else window.localStorage.removeItem(CSRF_KEY);
+    }
+  } catch {}
+}
+
+export function getStoredToken() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(TOKEN_KEY) || null;
+    }
+  } catch {}
+  return null;
+}
+
+export function getStoredCsrf() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const stored = window.localStorage.getItem(CSRF_KEY);
+      if (stored) return stored;
+    }
+  } catch {}
+  return readCookie('lpu_csrf') || null;
+}
+
+export function clearStoredSession() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(TOKEN_KEY);
+      window.localStorage.removeItem(CSRF_KEY);
+    }
+  } catch {}
+}
+
 function notifyUnauthorized(message) {
+  clearStoredSession();
   for (const handler of unauthorizedListeners) {
     try {
       handler(message);
@@ -90,12 +133,19 @@ export async function request(
   }
 
   const unsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
-  const csrfToken = unsafeMethod ? readCookie('lpu_csrf') : null;
+  const csrfToken = unsafeMethod ? getStoredCsrf() : null;
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  const localSessionToken = getStoredToken();
 
   let response;
   try {
     const accessToken = usesSupabaseAuth ? await getSupabaseAccessToken() : null;
+    const authHeaderValue = accessToken
+      ? `Bearer ${accessToken}`
+      : localSessionToken
+      ? `Bearer ${localSessionToken}`
+      : undefined;
+
     response = await fetch(`${API_BASE}${path}`, {
       method,
       signal: controller?.signal,
@@ -104,7 +154,8 @@ export async function request(
         Accept: 'application/json',
         ...(body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(authHeaderValue ? { Authorization: authHeaderValue } : {}),
+        ...(localSessionToken ? { 'X-Session-Token': localSessionToken } : {}),
         'X-Request-ID': requestId,
         ...headers,
       },
