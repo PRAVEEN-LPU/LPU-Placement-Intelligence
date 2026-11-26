@@ -90,6 +90,38 @@ SESSION_COOKIE = "lpu_session"
 CSRF_COOKIE = "lpu_csrf"
 
 
+def _bootstrap_default_accounts():
+    """Ensure standard demo accounts exist if auth database is empty."""
+    try:
+        users = auth.list_users(AUTH_DATABASE_PATH)
+        if not users:
+            default_pwd = "LpuPlacement@2027"
+            default_accounts = [
+                ("student.demo", "Demo Student", "student", "CSE-2027"),
+                ("mentor.cse", "Prof. CSE Mentor", "mentor", "CSE-2027"),
+                ("admin.lpu", "Placement Admin", "admin", None),
+                ("placement.demo", "Placement Officer", "placement_officer", None),
+                ("rahul.sharma", "Rahul Sharma", "student", "CSE-2027"),
+            ]
+            for username, display_name, role, cohort in default_accounts:
+                try:
+                    auth.create_user(
+                        AUTH_DATABASE_PATH,
+                        username=username,
+                        password=default_pwd,
+                        display_name=display_name,
+                        role=role,
+                        cohort=cohort,
+                    )
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+
+_bootstrap_default_accounts()
+
+
 def _set_auth_cookies(response, token: str, csrf_token: str, max_age: int):
     response.set_cookie(
         SESSION_COOKIE,
