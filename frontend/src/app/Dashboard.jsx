@@ -379,7 +379,6 @@ export default function Dashboard({ user, onLogout }) {
         ) : (
           <div className="student-workspace">
           <div id="student-section-overview" className="student-topic-panel" hidden={studentSection !== 'overview'}>
-          {user.role === 'student' && <StudentNextSteps studentId={user.id} recommendations={prediction?.recommendations || []} history={history} onOpenPlan={() => { setStudentSection('preparation'); selectTab('roadmap'); }} onOpenEvidence={() => setStudentSection('evidence')} onOpenProgress={() => { setStudentSection('preparation'); selectTab('progress'); }} />}
           <div className="dashboard-grid">
             <StudentForm
               formData={formData}
@@ -415,6 +414,7 @@ export default function Dashboard({ user, onLogout }) {
 
             </section>
           </div>
+          {user.role === 'student' && <StudentNextSteps studentId={user.id} recommendations={prediction?.recommendations || []} history={history} onOpenPlan={() => { setStudentSection('preparation'); selectTab('roadmap'); }} onOpenEvidence={() => setStudentSection('evidence')} onOpenProgress={() => { setStudentSection('preparation'); selectTab('progress'); }} />}
           </div>
 
           <div id="student-section-preparation" className="student-topic-panel" hidden={studentSection !== 'preparation'}>

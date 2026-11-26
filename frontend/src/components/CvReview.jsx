@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Download, FileText, RefreshCw, Upload } from 'lucide-react';
+import { CheckCircle2, Download, FileText, RefreshCw, Upload, XCircle } from 'lucide-react';
 import { download, get, post, request } from '../services/apiClient';
 
-const LABELS = { pending: 'Awaiting mentor review', approved: 'Approved by mentor', changes_requested: 'Changes requested' };
+const LABELS = {
+  pending: 'Awaiting mentor review',
+  approved: 'Approved by mentor',
+  changes_requested: 'Changes requested',
+  disapproved: 'Disapproved by mentor'
+};
 
 export default function CvReview({ studentId, mentor = false, onReviewed }) {
   const [records, setRecords] = useState(null);
@@ -47,12 +52,16 @@ export default function CvReview({ studentId, mentor = false, onReviewed }) {
   };
   const review = async (status) => {
     if (!latest || busy) return;
-    if (status === 'changes_requested' && !feedback.trim()) { setError('Add feedback so the student knows what to change.'); return; }
+    if ((status === 'changes_requested' || status === 'disapproved') && !feedback.trim()) {
+      setError(status === 'disapproved' ? 'Add feedback explaining why the CV was disapproved.' : 'Add feedback so the student knows what to change.');
+      return;
+    }
     setBusy(true); setError(''); setMessage('');
     try {
       await request(`/students/${studentId}/cv/${latest.id}/review`, { method: 'PATCH', body: { status, feedback: feedback.trim() } });
       onReviewed?.(status);
-      setFeedback(''); setMessage(status === 'approved' ? 'CV approved.' : 'Feedback sent to the student.');
+      setFeedback('');
+      setMessage(status === 'approved' ? 'CV approved.' : status === 'disapproved' ? 'CV disapproved and feedback sent to student.' : 'Feedback sent to the student.');
       await refresh();
     } catch (err) { setError(err?.message || 'The review could not be saved. Please retry.'); }
     finally { setBusy(false); }
@@ -65,7 +74,7 @@ export default function CvReview({ studentId, mentor = false, onReviewed }) {
       {records === null ? !error && <p role="status">Loading CV submissions…</p> : !latest ? <p className="probability-note">{mentor ? 'This student has not submitted a CV yet.' : 'You have not submitted a CV yet.'}</p> : <article className="cv-review-current">
         <div className="cv-review-summary"><div><span className={`cv-review-status cv-review-status-${latest.status}`}>{LABELS[latest.status] || 'Review status unavailable'}</span><h3>{latest.filename}</h3><p>Submitted {new Date(latest.submitted_at).toLocaleDateString()}{latest.reviewed_at ? ` · Reviewed ${new Date(latest.reviewed_at).toLocaleDateString()}` : ''}</p></div><button type="button" className="btn-preset" onClick={open}><Download size={15} aria-hidden="true" /> Download CV</button></div>
         {latest.feedback && <div className="cv-review-feedback"><strong>Mentor feedback</strong><p>{latest.feedback}</p></div>}
-        {mentor && latest.status === 'pending' && <div className="cv-review-actions"><label className="input-label">Feedback to student<textarea className="number-input-field" rows={3} maxLength={1000} value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="Share strengths and any suggested changes" /></label><p className="probability-note">Feedback is required when requesting changes.</p><div className="cv-review-buttons"><button type="button" className="study-resource-button" disabled={busy} onClick={() => review('approved')}><CheckCircle2 size={16} aria-hidden="true" /> Approve CV</button><button type="button" className="btn-preset" disabled={busy} onClick={() => review('changes_requested')}>Request changes</button></div></div>}
+        {mentor && latest.status === 'pending' && <div className="cv-review-actions"><label className="input-label">Feedback to student<textarea className="number-input-field" rows={3} maxLength={1000} value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="Share strengths, weaknesses, or why this CV is disapproved/needs changes" /></label><p className="probability-note">Feedback is required when requesting changes or disapproving.</p><div className="cv-review-buttons"><button type="button" className="study-resource-button" disabled={busy} onClick={() => review('approved')}><CheckCircle2 size={16} aria-hidden="true" /> Approve CV</button><button type="button" className="btn-preset" disabled={busy} onClick={() => review('changes_requested')}>Request changes</button><button type="button" className="btn-preset btn-disapprove-cv" disabled={busy} onClick={() => review('disapproved')}><XCircle size={16} aria-hidden="true" /> Disapprove CV</button></div></div>}
       </article>}
       {!mentor && <form className="study-resource-form cv-upload-form" onSubmit={submit}><label className="input-label">{latest ? 'Upload a new CV version' : 'Choose your CV'}<input key={fileKey} className="number-input-field" type="file" accept=".pdf,.docx" onChange={(event) => setFile(event.target.files?.[0] || null)} /></label><p className="probability-note">PDF or DOCX · Maximum 5 MB. A new version requires a new mentor review. In this demo, CV files are stored on this computer.</p><button type="submit" className="study-resource-button" disabled={busy || !file}><Upload size={16} aria-hidden="true" /> {busy ? 'Submitting…' : 'Submit for review'}</button></form>}
     </div>

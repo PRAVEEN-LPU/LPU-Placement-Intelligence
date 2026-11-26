@@ -55,7 +55,7 @@ def _connect(path: str | Path) -> sqlite3.Connection:
             student_id INTEGER NOT NULL,
             filename TEXT NOT NULL,
             content BLOB NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','changes_requested')),
+            status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','changes_requested','disapproved')),
             feedback TEXT NOT NULL DEFAULT '',
             reviewer_id INTEGER,
             submitted_at TEXT NOT NULL,

@@ -2,6 +2,7 @@ import React from 'react';
 import Dashboard from './app/Dashboard';
 import LoginScreen from './components/LoginScreen';
 import { BrandLogo } from './components/ui';
+import BackgroundBubbles from './components/BackgroundBubbles';
 import { useAuth } from './hooks/useAuth';
 
 function SessionSplash() {
@@ -28,13 +29,16 @@ function SessionSplash() {
 export default function App() {
   const { user, status, message, login, logout } = useAuth();
 
-  if (status === 'loading') {
-    return <SessionSplash />;
-  }
-
-  if (!user) {
-    return <LoginScreen onLogin={login} message={message} busy={status === 'authenticating'} />;
-  }
-
-  return <Dashboard key={user.id} user={user} onLogout={logout} />;
+  return (
+    <>
+      <BackgroundBubbles />
+      {status === 'loading' ? (
+        <SessionSplash />
+      ) : !user ? (
+        <LoginScreen onLogin={login} message={message} busy={status === 'authenticating'} />
+      ) : (
+        <Dashboard key={user.id} user={user} onLogout={logout} />
+      )}
+    </>
+  );
 }

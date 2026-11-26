@@ -310,66 +310,58 @@
 
 body {
   font-family: var(--font-main);
-  background-color: #060b14;
+  background-color: #8bcaf5;
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
-  /* Premium Glassmorphism Theme — Matching Vibrant Neon Spheres & Dark Navy Ocean */
+  /* Exact Sky Blue Gradient Matching User Swatch (#8bcaf5 / RGB: 139, 202, 245) */
   background-image:
-    /* Emerald/Neon Green Orb - Bottom Left */
-    radial-gradient(circle 380px at 10% 72%, rgba(0, 230, 118, 0.28) 0%, rgba(16, 185, 129, 0.12) 50%, transparent 75%),
-    /* Royal Cobalt Blue Orb - Top Left */
-    radial-gradient(circle 320px at 25% 15%, rgba(37, 99, 235, 0.35) 0%, rgba(30, 58, 138, 0.15) 50%, transparent 75%),
-    /* Giant Radiant Sky/Sapphire Blue Orb - Top Right */
-    radial-gradient(circle 440px at 86% 20%, rgba(59, 130, 246, 0.32) 0%, rgba(6, 182, 212, 0.15) 55%, transparent 80%),
-    /* Vivid Violet Sphere - Bottom Left */
-    radial-gradient(circle 260px at 8% 90%, rgba(139, 92, 246, 0.35) 0%, rgba(124, 58, 237, 0.1) 60%, transparent 80%),
-    /* Glowing Mint Green Orb - Mid/Bottom Right */
-    radial-gradient(circle 280px at 90% 68%, rgba(52, 211, 153, 0.28) 0%, rgba(16, 185, 129, 0.08) 60%, transparent 80%),
-    /* Deep Base Atmospheric Gradient */
-    linear-gradient(160deg, #070e1b 0%, #050a14 45%, #040810 100%);
+    radial-gradient(circle at 18% 15%, #a6d9fc 0%, #8bcaf5 40%, #76bded 100%);
   background-attachment: fixed;
 }
 
-body::before {
-  content: "";
+/* Ambient Moving Small Bubbles Layer */
+.ambient-bubbles-layer {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 0;
-  background-image:
-    /* Floating sphere 1: Bright Emerald Green (Left) */
-    radial-gradient(circle 130px at 14% 66%, #00e676 0%, #059669 65%, transparent 72%),
-    /* Floating sphere 2: Intense Cobalt Blue (Top Left) */
-    radial-gradient(circle 95px at 25% 14%, #2563eb 0%, #1d4ed8 70%, transparent 75%),
-    /* Floating sphere 3: Giant Royal Blue (Top Right) */
-    radial-gradient(circle 160px at 86% 22%, #3b82f6 0%, #1e40af 65%, transparent 72%),
-    /* Floating sphere 4: Purple-Violet (Bottom Left) */
-    radial-gradient(circle 85px at 9% 88%, #8b5cf6 0%, #6d28d9 70%, transparent 75%),
-    /* Floating sphere 5: Neon Mint (Right) */
-    radial-gradient(circle 80px at 91% 66%, #10b981 0%, #047857 70%, transparent 75%);
-  filter: blur(28px);
-  opacity: 0.65;
+  overflow: hidden;
 }
 
-body::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    repeating-conic-gradient(from 0deg at 78% 62%, rgba(56, 189, 248, 0.04) 0deg 2deg, transparent 2deg 12deg),
-    repeating-conic-gradient(from 45deg at 18% 28%, rgba(52, 211, 153, 0.035) 0deg 2deg, transparent 2deg 15deg);
-  opacity: 0.85;
+.ambient-small-bubble {
+  position: absolute;
+  bottom: -25px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.35) 60%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4), inset -1px -1px 2px rgba(139, 202, 245, 0.6);
+  animation-name: floatSmallBubble;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@keyframes floatSmallBubble {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.55;
+  }
+  85% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-110vh) translateX(22px);
+    opacity: 0;
+  }
 }
 
 /* Header */
@@ -646,19 +638,19 @@ body::after {
 .glass-card {
   position: relative;
   z-index: 1;
-  background: rgba(10, 24, 38, 0.65) !important;
-  backdrop-filter: blur(26px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(180%) !important;
-  border: 1px solid rgba(45, 212, 191, 0.32) !important;
+  background: rgba(10, 22, 38, 0.88) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   border-radius: var(--radius-xl);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 16px 45px rgba(10, 25, 45, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
   overflow: hidden;
   transition: all 0.25s ease;
 }
 
 .glass-card:hover {
   border-color: rgba(56, 189, 248, 0.5) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 24px rgba(45, 212, 191, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 20px 55px rgba(10, 25, 45, 0.45), 0 0 20px rgba(56, 189, 248, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
 }
 
 .card-header {
@@ -3552,6 +3544,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .cv-review-status { display: inline-flex; padding: .3rem .65rem; border-radius: 999px; background: rgba(245, 158, 11, .12); color: #fbbf81; font-size: .8rem; font-weight: 700; }
 .cv-review-status-approved { background: rgba(16, 185, 129, .14); color: #6ee7b7; }
 .cv-review-status-changes_requested { background: rgba(251, 113, 133, .13); color: #fda4af; }
+.cv-review-status-disapproved { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+.btn-disapprove-cv { color: #f87171 !important; border-color: rgba(239, 68, 68, 0.45) !important; background: rgba(239, 68, 68, 0.12) !important; display: inline-flex; align-items: center; gap: 0.4rem; }
+.btn-disapprove-cv:hover:not(:disabled) { background: rgba(239, 68, 68, 0.24) !important; border-color: #ef4444 !important; color: #fca5a5 !important; }
 .cv-review-feedback { margin-top: 1rem; padding-top: .85rem; border-top: 1px solid rgba(148, 163, 184, .18); }
 .cv-review-feedback p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .cv-review-actions { margin-top: 1rem; display: grid; gap: .7rem; }

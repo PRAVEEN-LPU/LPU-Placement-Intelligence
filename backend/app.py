@@ -1473,11 +1473,11 @@ def review_student_cv(student_id, cv_id):
     if not isinstance(data, dict):
         return jsonify({'status': 'error', 'message': 'Provide a valid review decision.'}), 400
     decision, feedback = data.get('status'), data.get('feedback', '')
-    if decision not in ('approved', 'changes_requested') or not isinstance(feedback, str) or len(feedback.strip()) > 1000:
+    if decision not in ('approved', 'changes_requested', 'disapproved') or not isinstance(feedback, str) or len(feedback.strip()) > 1000:
         return jsonify({'status': 'error', 'message': 'Choose a review decision and provide feedback of at most 1000 characters.'}), 400
     feedback = feedback.strip()
-    if decision == 'changes_requested' and not feedback:
-        return jsonify({'status': 'error', 'message': 'Explain the changes the student should make.'}), 400
+    if decision in ('changes_requested', 'disapproved') and not feedback:
+        return jsonify({'status': 'error', 'message': 'Explain the reason or changes the student should make.'}), 400
     db = collaboration._connect(HISTORY_DATABASE_PATH)
     try:
         db.execute('BEGIN IMMEDIATE')
