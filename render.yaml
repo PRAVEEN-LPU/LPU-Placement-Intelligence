@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: lpu-placement-intelligence-backend
+    env: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: APP_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: CORS_ORIGINS
+        value: https://lpu-placement-intelligence.vercel.app,http://localhost:5173
+      - key: AUTH_COOKIE_SECURE
+        value: true
+      - key: MODEL_PATH
+        value: placement_model.joblib
+      - key: HISTORY_DATABASE_PATH
+        value: data/assessment_history.sqlite3
+      - key: AUTH_DATABASE_PATH
+        value: data/auth.sqlite3
+      - key: SESSION_TTL_SECONDS
+        value: 28800
+      - key: LOGIN_MAX_ATTEMPTS
+        value: 5
+      - key: LOGIN_WINDOW_SECONDS
+        value: 300
+      - key: MAX_CONTENT_LENGTH
+        value: 65536
+      - key: COHORT_MIN_GROUP_SIZE
+        value: 5
