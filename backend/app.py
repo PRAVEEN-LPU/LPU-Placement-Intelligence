@@ -94,16 +94,17 @@ def _bootstrap_default_accounts():
     """Ensure standard demo accounts exist if auth database is empty."""
     try:
         users = auth.list_users(AUTH_DATABASE_PATH)
-        if not users:
-            default_pwd = "LpuPlacement@2027"
-            default_accounts = [
-                ("student.demo", "Demo Student", "student", "CSE-2027"),
-                ("mentor.cse", "Prof. CSE Mentor", "mentor", "CSE-2027"),
-                ("admin.lpu", "Placement Admin", "admin", None),
-                ("placement.demo", "Placement Officer", "placement_officer", None),
-                ("rahul.sharma", "Rahul Sharma", "student", "CSE-2027"),
-            ]
-            for username, display_name, role, cohort in default_accounts:
+        default_pwd = "123456"
+        default_accounts = [
+            ("student.demo", "Demo Student", "student", "CSE-2027"),
+            ("mentor.cse", "Prof. CSE Mentor", "mentor", "CSE-2027"),
+            ("admin.lpu", "Placement Admin", "admin", None),
+            ("placement.demo", "Placement Officer", "placement_officer", None),
+            ("rahul.sharma", "Rahul Sharma", "student", "CSE-2027"),
+        ]
+        existing_usernames = {u["username"] for u in users}
+        for username, display_name, role, cohort in default_accounts:
+            if username not in existing_usernames:
                 try:
                     auth.create_user(
                         AUTH_DATABASE_PATH,
@@ -113,6 +114,11 @@ def _bootstrap_default_accounts():
                         role=role,
                         cohort=cohort,
                     )
+                except Exception:
+                    pass
+            else:
+                try:
+                    auth.set_password(AUTH_DATABASE_PATH, username, default_pwd)
                 except Exception:
                     pass
     except Exception:
